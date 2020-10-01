@@ -51,7 +51,7 @@ def main():
 			
 			if Max == Min:
 				break
-			strip_n_save(Min, Max, cuts, file_directory, saving_directory, extra_variables, particle, blinded = True)
+			strip_n_save(Min, Max, cuts, file_directory, saving_directory, extra_variables, particle, blinded = False)
 			temp = Max
 			if (Max+step > subjobs):
 				Max = subjobs
@@ -79,7 +79,7 @@ def main():
 		   os.makedirs(PATH + name + "/bins")
 		saving_dir = PATH + name + "/bins/"
 		print("\n\nCreating the final files")
-		split_in_bins_n_save(final_chain, saving_dir, run, particle, blinded = True) # split the datafile into mass-y-pt bins
+		split_in_bins_n_save(final_chain, saving_dir, run, particle, blinded = False) # split the datafile into mass-y-pt bins
 
 		print ("\nProcess completed for " + name)
 		
@@ -117,32 +117,32 @@ def main():
 #### This function takes a ROOT file as an input, keeps the variables in useful_vars in the tree and throws the other ones away. The pruned tree is then returned. ###
 def setBranch_funct (root_file, extra_variables, blinded = False):
         
-        useful_vars = []
+    useful_vars = []
         
-        if(blinded):
-                #These variables were taken from Maris's Load_and_train.py script
+    if(blinded):
+        #These variables were taken from Maris's Load_and_train.py script
 
-                variables = ["lcplus_RAPIDITY",
+        variables = ["lcplus_P","lcplus_RAPIDITY","lcplus_OWNPV_CHI2",
 		"piplus_RAPIDITY",
 		"pplus_RAPIDITY",
-		"kminus_RAPIDITY",
-                "lcplus_ENDVERTEX_CHI2",
+		"kminus_RAPIDITY","pplus_P","piplus_P","kminus_P",
+        "lcplus_ENDVERTEX_CHI2",
 		"lcplus_IPCHI2_OWNPV",
 		"pplus_OWNPV_CHI2",
 		"kminus_OWNPV_CHI2",
 		"piplus_OWNPV_CHI2",
-                "lcplus_IP_OWNPV",
-                "piplus_ProbNNpi",
+        "lcplus_IP_OWNPV",
+        "piplus_ProbNNpi",
 		"pplus_ProbNNp",
 		"kminus_ProbNNk",
 		"pplus_TRACK_PCHI2",
 		"piplus_TRACK_PCHI2",
 		"kminus_TRACK_PCHI2"]
 
-                useful_vars = variables
+        useful_vars = variables
 
-        else:
-                variables = ["lcplus_MM", 
+    else:
+        variables = ["lcplus_MM", 
                        "lcplus_P", 
                        "lcplus_PT", 
                        "lcplus_ETA",
@@ -173,24 +173,26 @@ def setBranch_funct (root_file, extra_variables, blinded = False):
                        "kminus_ProbNNk", 
                        "kminus_PIDK", "PVNTRACKS", "piplus_PX", "pplus_PX", "kminus_PX", "piplus_PY", "pplus_PY", "kminus_PY", "piplus_PZ", "pplus_PZ", "kminus_PZ"] # list of variables kept in the tree
 
-                useful_vars = variables
+        useful_vars = variables
+                
 	
 
-        for extra_variable in extra_variables:
-          if not (extra_variable == ""): #if extra_variable is something needed, then it will be added to the array
+    for extra_variable in extra_variables:
+        if not (extra_variable == ""):
+            #if extra_variable is something needed, then it will be added to the array
             useful_vars.append(extra_variable)
 
-	tfile = root_file  #These 2 lines depend on the type of file fed into the function
-	tfile.SetBranchStatus("*", False) #first deactivate all branches
+    tfile = root_file  #These 2 lines depend on the type of file fed into the function
+    tfile.SetBranchStatus("*", False) #first deactivate all branches
 	
-	for element in useful_vars: # then reactivate the ones present in useful_vars
-		tfile.SetBranchStatus(element, True)
+    for element in useful_vars: # then reactivate the ones present in useful_vars
+            tfile.SetBranchStatus(element, True)
 
-	return tfile # return the pruned TTree
+    return tfile # return the pruned TTree
 
 
 #### This function requires a .root file as an input that in its structure has DecayTree immediately there without any intermediate structure. The TTree is divided into bins and these are saved in the saving_dir (which is a string of the saving directory) ####
-def split_in_bins_n_save (root_file, saving_dir, run, blinded,  mother_particle = "Lc"):
+def split_in_bins_n_save (root_file, saving_dir, run, blinded=False,  mother_particle = "Lc"):
 
 	ybins = Imports.getYbins() #Rapidity bins
     
@@ -240,14 +242,14 @@ def split_in_bins_n_save (root_file, saving_dir, run, blinded,  mother_particle 
 				ptcuts = "lcplus_PT >= {0} && lcplus_PT < {1}".format(ptbin[0], ptbin[1])
 				if (ybin[0] == 2.0):
 					allcuts = " {0} && {1}".format(ptcuts, mass_cuts)
-					strip_n_save(0,0, allcuts, "", saving_dir + "ptbins/" + particle + "_ptbin_{0}-{1}.root".format(ptbin[0], ptbin[1]), extra_variables, particle, blinded, bins = True,tree = tree)
+					strip_n_save(0,0, allcuts, "", saving_dir + "ptbins/" + particle + "_ptbin_{0}-{1}.root".format(ptbin[0], ptbin[1]), extra_variables, particle, blinded = False, bins = True,tree = tree)
 				yptcut = ycuts + " && " + ptcuts
 				allcuts = " {0} && {1}".format(yptcut, mass_cuts)
-				strip_n_save(0,0, allcuts, "", saving_dir + "y_ptbins/" + particle + "_ybin_{0}-{1}_ptbin_{2}-{3}.root".format(ybin[0],ybin[1],ptbin[0],ptbin[1]), extra_variables, particle, blinded, bins = True, tree = tree)
+				strip_n_save(0,0, allcuts, "", saving_dir + "y_ptbins/" + particle + "_ybin_{0}-{1}_ptbin_{2}-{3}.root".format(ybin[0],ybin[1],ptbin[0],ptbin[1]), extra_variables, particle, blinded = False, bins = True, tree = tree)
 			print("\n")
 
 #### Function that takes as inputs: min and max which are 2 integers that indicates from which subjob to which subjob the TChain ranges; cuts are the cuts applied to the TTrees; directory is the directory in which the subjobs are to be found and saving_directory is the directory in which the stripped files are then saved. ####
-def strip_n_save (Min, Max, cuts, directory, saving_directory, extra_variables, particle,blinded, bins = False, tree = None):
+def strip_n_save (Min, Max, cuts, directory, saving_directory, extra_variables, particle,blinded=False, bins = False, tree = None):
     
 	if not (bins):
 		filename = "{0}2pKpiTuple.root".format(particle)
@@ -281,4 +283,3 @@ def strip_n_save (Min, Max, cuts, directory, saving_directory, extra_variables, 
     
 if __name__ == '__main__':
 	main()
-
