@@ -122,22 +122,36 @@ def setBranch_funct (root_file, extra_variables, blinded = True):
     if(blinded):
         #These variables were taken from Maris's Load_and_train.py script
 
-        variables = ["lcplus_P","lcplus_RAPIDITY","lcplus_OWNPV_CHI2",
-		"piplus_RAPIDITY",
-		"pplus_RAPIDITY",
-		"kminus_RAPIDITY","pplus_P","piplus_P","kminus_P",
-        "lcplus_ENDVERTEX_CHI2",
-		"lcplus_IPCHI2_OWNPV",
-		"pplus_OWNPV_CHI2",
-		"kminus_OWNPV_CHI2",
-		"piplus_OWNPV_CHI2",
-        "lcplus_IP_OWNPV",
-        "piplus_ProbNNpi",
-		"pplus_ProbNNp",
-		"kminus_ProbNNk",
-		"pplus_TRACK_PCHI2",
-		"piplus_TRACK_PCHI2",
-		"kminus_TRACK_PCHI2"]
+       variables = ["lcplus_MM", 
+                       "lcplus_P", 
+                       "lcplus_PT", 
+                       "lcplus_ETA",
+                       "lcplus_RAPIDITY", 
+                       "lcplus_TIP", 
+                       "lcplus_IPCHI2_OWNPV", 
+                       "lcplus_OWNPV_CHI2", 
+                       "lcplus_TAU",
+                       "lcplus_L0HadronDecision_TOS", 
+                       "pplus_M", 
+                       "pplus_P", 
+                       "pplus_PT",
+                       "pplus_RAPIDITY", 
+                       "pplus_ETA",
+                       "pplus_ProbNNp",
+                       "piplus_M",
+                       "piplus_P", 
+                       "piplus_PT", 
+                       "piplus_RAPIDITY",
+                       "piplus_ETA",
+                       "piplus_ProbNNpi",
+                       "pplus_PIDp",
+                       "kminus_M",
+                       "kminus_P", 
+                       "kminus_PT", 
+                       "kminus_RAPIDITY",
+                       "kminus_ETA",
+                       "kminus_ProbNNk", 
+                       "kminus_PIDK", "PVNTRACKS", "piplus_PX", "pplus_PX", "kminus_PX", "piplus_PY", "pplus_PY", "kminus_PY", "piplus_PZ", "pplus_PZ", "kminus_PZ"]
 
         useful_vars = variables
 
@@ -171,7 +185,7 @@ def setBranch_funct (root_file, extra_variables, blinded = True):
                        "kminus_RAPIDITY",
                        "kminus_ETA",
                        "kminus_ProbNNk", 
-                       "kminus_PIDK", "PVNTRACKS", "piplus_PX", "pplus_PX", "kminus_PX", "piplus_PY", "pplus_PY", "kminus_PY", "piplus_PZ", "pplus_PZ", "kminus_PZ"] # list of variables kept in the tree
+                       "kminus_PIDK", "PVNTRACKS", "piplus_PX", "pplus_PX", "kminus_PX", "piplus_PY", "pplus_PY", "kminus_PY", "piplus_PZ", "pplus_PZ", "kminus_PZ"]
 
         useful_vars = variables
                 
