@@ -1,4 +1,4 @@
-TUPLE_PATH = "/dcache/bfys/dwickrem/test_outputs/stripped_n_binned/test2/"
+TUPLE_PATH = "/dcache/bfys/dwickrem/test_outputs/stripped_n_binned/test1/"
 RAW_TUPLE_PATH = "/dcache/bfys/jdevries/ntuples/LcAnalysis/ganga/"
 
 def getMCCuts (particle, run):
@@ -36,17 +36,18 @@ def getYbins():
 
 
 DATA_jobs_Dict = {
-	"43":["2011_MagDown", 907],
-	"45":["2011_MagUp", 817],
-	"46":["2012_MagUp",1342],
-	"42":["2012_MagDown",1155],
-	"119":["2016_MagDown",527,"Lc"],
-	"115":["2016_MagDown",186,"Xic"],
-	"91":["2017_MagDown",529,"Lc"],
-	"116":["2017_MagDown",257,"Xic"],
-	"117":["2018_MagDown",471,"Xic"],
-	"92":["2018_MagDown",656,"Lc"],
+	"43":["2011_MagDown", 907]
 	} 
+
+#	"45":["2011_MagUp", 817],
+#	"46":["2012_MagUp",1342],
+#	"42":["2012_MagDown",1155],
+#	"119":["2016_MagDown",527,"Lc"],
+#	"115":["2016_MagDown",186,"Xic"],
+#	"91":["2017_MagDown",529,"Lc"],
+#	"116":["2017_MagDown",257,"Xic"],
+#	"117":["2018_MagDown",471,"Xic"],
+#	"92":["2018_MagDown",656,"Lc"],
 	
 MC_jobs_Dict = {
 	"NA":["2011","MagDown", 907,"Lc",""],
