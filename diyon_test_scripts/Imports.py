@@ -36,9 +36,10 @@ def getYbins():
 
 
 DATA_jobs_Dict = {
-	"43":["2011_MagDown", 907]
+	"115":["2016_MagDown",186,"Xic"]
 	} 
 
+#       "43":["2011_MagDown", 907],
 #	"45":["2011_MagUp", 817],
 #	"46":["2012_MagUp",1342],
 #	"42":["2012_MagDown",1155],

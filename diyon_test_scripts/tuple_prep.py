@@ -13,7 +13,7 @@ def main():
     
     for element in folders_dict:
         if int(element) > 41 and int(element) < 47:
-            extra_variables = ["lcplus_Hlt1TrackAllL0Decision_TOS", "lcplus_Hlt2CharmHadD2HHHDecision_TOS"]
+            extra_variables = ["lcplus_Hlt1TrackAllL0Decision_TOS", "lcplus_Hlt2CharmHadD2HHHDecision_TOS","*L0*","*Hlt*","*HLT*"]
             run = 1
             particle = "Lc"
             
@@ -93,8 +93,8 @@ def main():
                 i += 1
             final_chain.Add(saving_directory+element)
             
-        if not os.path.exists(PATH+name+"/bins/"):
-            os.makedirs(PATH+name+"/bins/")
+        if not os.path.exists(PATH+name+"/bins"):
+            os.makedirs(PATH+name+"/bins")
             
         saving_directory = PATH+name+"/bins/"
         
@@ -122,6 +122,9 @@ def main():
             sys.stdout.flush()
             p += 1
             
+        if "cluster" in i:
+            continue
+            
         for particle in mother_particle:
                 
             totfile = ROOT.TFile.Open(BASE_PATH+i+"/{}_total.root".format(particle),"RECREATE")
@@ -129,7 +132,7 @@ def main():
             
             tree = TChain("DecayTree")
                 
-            for j in os.listdir(BASE_PATH+i+"/bins/ybins/"):
+            for j in os.listdir(BASE_PATH+i+"/bins/ybins"):
                 if particle in j:
                     tree.Add(BASE_PATH+i+"/bins/ybins/"+j)
             
@@ -137,6 +140,9 @@ def main():
             totfile.Close()
             
             del totfile
+
+    print("\nDeleting clusters")
+    os.system("rm -rf {}*_clusters".format(BASE_PATH))
             
     print("\nNTuple preparation is done")
     
@@ -244,13 +250,13 @@ def split_in_bins_and_save(root_file, saving_directory, run, mother_particle = "
         particles.append(mother_particle)
         
     if not os.path.exists(saving_directory + "ybins/"):
-        os.mkdirs(saving_directory + "ybins/")
+        os.makedirs(saving_directory + "ybins/")
         
     if not os.path.exists(saving_directory + "ptbins/"):
-        os.mkdirs(saving_directory + "ptbins/")
+        os.makedirs(saving_directory + "ptbins/")
         
     if not os.path.exists(saving_directory + "y_ptbins/"):
-        os.mkdirs(saving_directory + "y_ptbins/")
+        os.makedirs(saving_directory + "y_ptbins/")
         
     extra_variables = [""]
     
@@ -291,7 +297,7 @@ def split_in_bins_and_save(root_file, saving_directory, run, mother_particle = "
                 strip_and_save(0,0, allcuts, "", saving_directory + "ptbins/" + particle + "_ptbin_{0}-{1}.root".format(ptbin[0], ptbin[1]), extra_variables, particle, bins = True,tree = tree, blinded = blind_data)
                 
             ypt_cut = ycuts+"&&"+ptcuts
-            allcuts = "{0} && {1}".format(yptcut, mass_cuts)
+            allcuts = "{0} && {1}".format(ypt_cut, mass_cuts)
             
             strip_and_save(0,0, allcuts, "", saving_directory + "y_ptbins/" + particle + "_ybin_{0}-{1}_ptbin_{2}-{3}.root".format(ybin[0],ybin[1],ptbin[0],ptbin[1]), extra_variables, particle, bins = True, tree = tree, blinded = blind_data)
             
