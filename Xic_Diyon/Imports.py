@@ -1,4 +1,4 @@
-TUPLE_PATH = "/dcache/bfys/dwickrem/test_outputs/stripped_n_binned/test1/"
+TUPLE_PATH = "/dcache/bfys/dwickrem/test1/"
 RAW_TUPLE_PATH = "/dcache/bfys/jdevries/ntuples/LcAnalysis/ganga/"
 
 def getMCCuts (particle, run):
@@ -12,14 +12,20 @@ def getMCCuts (particle, run):
 		#BKGCAT = "(lcplus_BKGCAT == 0 || lcplus_BKGCAT == 10 || lcplus_BKGCAT == 50)"
 		return IDcuts #+ "&&" + BKGCAT
 
-def getDataCuts (run):
-        #lcplus_P < 300000 && lcplus_OWNPV_CHI2 < 80 && pplus_ProbNNp > 0.5 && kminus_ProbNNk > 0.4 && piplus_ProbNNpi > 0.5 && pplus_P < 120000 && kminus_P < 115000 && piplus_P < 80000 && pplus_PIDp > 0 && kminus_PIDK > 0 && 
-	cuts = "lcplus_L0HadronDecision_TOS == 1"
-	if run == 1:
-		trigger_cuts = "lcplus_Hlt1TrackAllL0Decision_TOS == 1 && lcplus_Hlt2CharmHadD2HHHDecision_TOS ==1"
-	elif run == 2:
-		trigger_cuts = "lcplus_Hlt1TrackMVADecision_TOS == 1"
-	return cuts + " && " + trigger_cuts
+def getDataCuts (run, blinded = False):
+    if(blinded):
+        cuts = "lcplus_L0HadronDecision_TOS == 1"
+                
+    else:
+        cuts = "lcplus_P < 300000 && lcplus_OWNPV_CHI2 < 80 && pplus_ProbNNp > 0.5 && kminus_ProbNNk > 0.4 && piplus_ProbNNpi > 0.5 && pplus_P < 120000 && kminus_P < 115000 && piplus_P < 80000 && pplus_PIDp > 0 && kminus_PIDK > 0 && lcplus_L0HadronDecision_TOS == 1"
+
+
+    if(run == 1):
+        trigger_cuts = "lcplus_Hlt1TrackAllL0Decision_TOS == 1 && lcplus_Hlt2CharmHadD2HHHDecision_TOS ==1"
+    elif(run == 2):
+        trigger_cuts = "lcplus_Hlt1TrackMVADecision_TOS == 1"
+
+    return cuts + " && " + trigger_cuts
 
 def getBackgroundCuts(particle):
 	if particle == "Lc":
@@ -36,19 +42,19 @@ def getYbins():
 
 
 DATA_jobs_Dict = {
-	"115":["2016_MagDown",186,"Xic"]
+        "43":["2011_MagDown", 907],
+	"45":["2011_MagUp", 817],
+	"46":["2012_MagUp",1342],
+	"42":["2012_MagDown",1155],
+	"119":["2016_MagDown",527,"Lc"],
+	"115":["2016_MagDown",186,"Xic"],
+	"91":["2017_MagDown",529,"Lc"],
+	"116":["2017_MagDown",257,"Xic"],
+	"117":["2018_MagDown",471,"Xic"],
+	"92":["2018_MagDown",656,"Lc"]
 	} 
 
-#       "43":["2011_MagDown", 907],
-#	"45":["2011_MagUp", 817],
-#	"46":["2012_MagUp",1342],
-#	"42":["2012_MagDown",1155],
-#	"119":["2016_MagDown",527,"Lc"],
-#	"115":["2016_MagDown",186,"Xic"],
-#	"91":["2017_MagDown",529,"Lc"],
-#	"116":["2017_MagDown",257,"Xic"],
-#	"117":["2018_MagDown",471,"Xic"],
-#	"92":["2018_MagDown",656,"Lc"],
+       
 	
 MC_jobs_Dict = {
 	"NA":["2011","MagDown", 907,"Lc",""],

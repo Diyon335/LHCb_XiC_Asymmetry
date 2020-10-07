@@ -3,11 +3,20 @@ from ROOT import TChain, TFile
 from Imports import TUPLE_PATH, RAW_TUPLE_PATH, DATA_jobs_Dict
 #Main function
 def main():
-    #Dictionary for all the data
-    folders_dict = DATA_jobs_Dict
+    #If you want to test on a small portion of data, then enable it here
+    TESTING = True
+
+    if(TESTING):
+        folders_dict = {"115":["2016_MagDown",186,"Xic"]}
+    else:
+        #Dictionary for all the data
+        folders_dict = DATA_jobs_Dict
     
     #Path to save the tuples
     PATH = TUPLE_PATH
+
+    if not os.path.exists(PATH):
+        os.makedirs(PATH)
     
     blind_data = True
     
@@ -22,17 +31,18 @@ def main():
             particle = folders_dict[element][2]
             run = 2
         
-        name = folders_dict[element][0]
         
         subjobs = folders_dict[element][1]
         
         if (blind_data):
-            saving_directory = PATH+name+"_blinded_clusters/"
+             name = folders_dict[element][0]+"_blinded"
             
         else:
-            saving_directory = PATH+name+"_clusters/"
+             name = folders_dict[element][0]
         
-        cuts = Imports.getDataCuts(run)
+        saving_directory = PATH+name+"_clusters/"
+
+        cuts = Imports.getDataCuts(run, blinded = blind_data)
         
         if not os.path.exists(saving_directory):
             os.makedirs(saving_directory)
@@ -142,6 +152,7 @@ def main():
             del totfile
 
     print("\nDeleting clusters")
+
     os.system("rm -rf {}*_clusters".format(BASE_PATH))
             
     print("\nNTuple preparation is done")
