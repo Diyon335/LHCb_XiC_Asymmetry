@@ -1,5 +1,5 @@
 import ROOT, os, Imports, sys
-from ROOT import TChain, TFile
+from ROOT import TChain, TFile, TTree
 from Imports import TUPLE_PATH, RAW_TUPLE_PATH, DATA_jobs_Dict
 #Main function
 def main():
@@ -354,6 +354,45 @@ def strip_and_save(Min, Max, cuts, directory, saving_directory, extra_variables,
     wfile.cd()
     subtree.Write()
     wfile.Close()
+
+def test():
+
+    for i in os.listdir(TUPLE_PATH):
+        ##DATASET1
+        if not os.path.exists(TUPLE_PATH+i+"/random_data/dataset1/ybins/"): 
+            os.makedirs(TUPLE_PATH+i+"/random_data/dataset1/ybins/")
+
+        if not os.path.exists(TUPLE_PATH+i+"/random_data/dataset1/ptbins/"): 
+            os.makedirs(TUPLE_PATH+i+"/random_data/dataset1/ptbins/")
+
+        if not os.path.exists(TUPLE_PATH+i+"/random_data/dataset1/y_ptbins/"): 
+            os.makedirs(TUPLE_PATH+i+"/random_data/dataset1/y_ptbins/")
+
+        ##DATASET2
+        if not os.path.exists(TUPLE_PATH+i+"/random_data/dataset2/ybins/"): 
+            os.makedirs(TUPLE_PATH+i+"/random_data/dataset2/ybins/")
+
+        if not os.path.exists(TUPLE_PATH+i+"/random_data/dataset2/ptbins/"): 
+            os.makedirs(TUPLE_PATH+i+"/random_data/dataset2/ptbins/")
+
+        if not os.path.exists(TUPLE_PATH+i+"/random_data/dataset2/y_ptbins/"): 
+            os.makedirs(TUPLE_PATH+i+"/random_data/dataset2/y_ptbins/")
+
+            
+        #For all ybins
+        for root_file in os.listdir(TUPLE_PATH+i+"/bins/ybins/"):
+            name = root_file
+
+            read_file = ROOT.TFile(name, "READ")
+            tree = read_file.Get("DecayTree")
+            tree.Show()
+            print(str(tree.GetEntry(0)))
+            
+
+    
+        
+
     
 if __name__ == '__main__':
-    main()
+#    main()
+    test()
