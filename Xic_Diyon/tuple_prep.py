@@ -1,6 +1,13 @@
-import ROOT, os, Imports, sys
+##########################
+# Script for tuple preparation
+#
+# Authors: Simon Calo, Jonas Tjepkema, Diyon Wickremeratne
+##########################
+import ROOT, os, Imports, sys, numpy
 from ROOT import TChain, TFile, TTree
 from Imports import TUPLE_PATH, RAW_TUPLE_PATH, DATA_jobs_Dict
+from numpy import random
+
 #Main function
 def main():
     #If you want to test on a small portion of data, then enable it here
@@ -356,41 +363,61 @@ def strip_and_save(Min, Max, cuts, directory, saving_directory, extra_variables,
     wfile.Close()
 
 def test():
+    
+    bins = ["ybins","ptbins","y_ptbins"]
 
     for i in os.listdir(TUPLE_PATH):
-        ##DATASET1
-        if not os.path.exists(TUPLE_PATH+i+"/random_data/dataset1/ybins/"): 
-            os.makedirs(TUPLE_PATH+i+"/random_data/dataset1/ybins/")
-
-        if not os.path.exists(TUPLE_PATH+i+"/random_data/dataset1/ptbins/"): 
-            os.makedirs(TUPLE_PATH+i+"/random_data/dataset1/ptbins/")
-
-        if not os.path.exists(TUPLE_PATH+i+"/random_data/dataset1/y_ptbins/"): 
-            os.makedirs(TUPLE_PATH+i+"/random_data/dataset1/y_ptbins/")
-
-        ##DATASET2
-        if not os.path.exists(TUPLE_PATH+i+"/random_data/dataset2/ybins/"): 
-            os.makedirs(TUPLE_PATH+i+"/random_data/dataset2/ybins/")
-
-        if not os.path.exists(TUPLE_PATH+i+"/random_data/dataset2/ptbins/"): 
-            os.makedirs(TUPLE_PATH+i+"/random_data/dataset2/ptbins/")
-
-        if not os.path.exists(TUPLE_PATH+i+"/random_data/dataset2/y_ptbins/"): 
-            os.makedirs(TUPLE_PATH+i+"/random_data/dataset2/y_ptbins/")
-
-            
-        #For all ybins
-        for root_file in os.listdir(TUPLE_PATH+i+"/bins/ybins/"):
-            name = root_file
-
-            read_file = ROOT.TFile(name, "READ")
-            tree = read_file.Get("DecayTree")
-            tree.Show()
-            print(str(tree.GetEntry(0)))
-            
-
-    
         
+        print("\nWorking on "+i+" data")
+        
+        for bin_type in bins:
+
+            print("\nFor the "+bin_type)
+
+            ##DATASET1
+            if not os.path.exists(TUPLE_PATH+i+"/random_data/dataset1/"+bin_type+"/"): 
+                os.makedirs(TUPLE_PATH+i+"/random_data/dataset1/"+bin_type+"/")
+
+            ##DATASET2
+            if not os.path.exists(TUPLE_PATH+i+"/random_data/dataset2/"+bin_type+"/"): 
+                os.makedirs(TUPLE_PATH+i+"/random_data/dataset2/"+bin_type+"/")
+
+        
+            for root_file in os.listdir(TUPLE_PATH+i+"/bins/"+bin_type+"/"):
+                
+                print("\nRandomising: "+root_file)
+
+                name = root_file
+
+                read_file = ROOT.TFile(TUPLE_PATH+i+"/bins/"+bin_type+"/"+name, "READ")
+                dataTree = read_file.Get("DecayTree")
+
+                file1 = ROOT.TFile.Open(TUPLE_PATH+i+"/random_data/dataset1/"+bin_type+"/"+name,"RECREATE")
+                file2 = ROOT.TFile.Open(TUPLE_PATH+i+"/random_data/dataset2/"+bin_type+"/"+name,"RECREATE")
+
+                tree1 = ROOT.TTree("DecayTree","DecayTree")
+                tree2 = ROOT.TTree("DecayTree","DecayTree")
+
+                tree1 = dataTree.CloneTree(0)
+                tree2 = dataTree.CloneTree(0)
+                
+                for entry in range(dataTree.GetEntries()):
+                    if(random.rand()>0.5):
+                        dataTree.GetEntry(entry)
+                        tree1.Fill()
+                        file1.cd()
+                        tree1.Write()
+                        
+                    else:
+                        dataTree.GetEntry(entry)
+                        tree2.Fill()
+                        file2.cd()
+                        tree2.Write()
+                
+                file1.Close()
+                file2.Close()
+
+                
 
     
 if __name__ == '__main__':
