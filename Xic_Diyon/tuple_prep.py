@@ -1,9 +1,9 @@
-dele##########################
+##########################
 # Script for tuple preparation
 #
 # Authors: Simon Calo, Jonas Tjepkema, Diyon Wickremeratne
 ##########################
-import ROOT, os, Imports, sys, numpy, shutil
+import ROOT, os, Imports, sys, numpy, time
 from ROOT import TChain, TFile, TTree
 from Imports import TUPLE_PATH, RAW_TUPLE_PATH, DATA_jobs_Dict
 from numpy import random
@@ -140,6 +140,8 @@ def main():
             p += 1
             
         if "cluster" in i:
+            for root_file in os.listdir(BASE_PATH+i):
+                os.system("rm {}".format(BASE_PATH+i+"/"+root_file))
             continue
             
         for particle in mother_particle:
@@ -158,9 +160,9 @@ def main():
             
             del totfile
 
-    print("\nDeleting clusters")
+    print("\nDeleting clusters in 10 seconds")
 
-    shutil.rmtree("{}*_clusters".format(BASE_PATH), ignore_errors = True)
+    os.system("rm -rf {}*_clusters".format(BASE_PATH))
             
     print("\nNTuple preparation is done")
     
