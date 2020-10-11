@@ -1,9 +1,9 @@
-##########################
+dele##########################
 # Script for tuple preparation
 #
 # Authors: Simon Calo, Jonas Tjepkema, Diyon Wickremeratne
 ##########################
-import ROOT, os, Imports, sys, numpy
+import ROOT, os, Imports, sys, numpy, shutil
 from ROOT import TChain, TFile, TTree
 from Imports import TUPLE_PATH, RAW_TUPLE_PATH, DATA_jobs_Dict
 from numpy import random
@@ -160,7 +160,7 @@ def main():
 
     print("\nDeleting clusters")
 
-    os.system("rm -rf {}*_clusters".format(BASE_PATH))
+    shutil.rmtree("{}*_clusters".format(BASE_PATH), ignore_errors = True)
             
     print("\nNTuple preparation is done")
     
@@ -362,7 +362,7 @@ def strip_and_save(Min, Max, cuts, directory, saving_directory, extra_variables,
     subtree.Write()
     wfile.Close()
 
-def test():
+def randomise():
     
     bins = ["ybins","ptbins","y_ptbins"]
 
@@ -448,5 +448,5 @@ def test():
                 
 
 if __name__ == '__main__':
-#    main()
-    test()
+    main()
+    randomise()
