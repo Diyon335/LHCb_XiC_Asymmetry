@@ -400,26 +400,53 @@ def test():
 
                 tree1 = dataTree.CloneTree(0)
                 tree2 = dataTree.CloneTree(0)
+
+                n = dataTree.GetEntries()
+                x = 0
+
                 
                 for entry in range(dataTree.GetEntries()):
+                    #Progress 
+                    if(x%1000==0):
+                        j = (x / n)*100
+                        sys.stdout.write('\r')
+                        sys.stdout.write("{0}%".format(str(int(j))))
+                        sys.stdout.flush()
+
+                    if(x==n):
+                        sys.stdout.write("\r")
+                        sys.stdout.write("100%")
+                        sys.stdout.flush()
+                
+                    #50% probability of being added to dataset1 or dataset2
                     if(random.rand()>0.5):
                         dataTree.GetEntry(entry)
                         tree1.Fill()
-                        file1.cd()
-                        tree1.Write()
                         
                     else:
                         dataTree.GetEntry(entry)
                         tree2.Fill()
-                        file2.cd()
-                        tree2.Write()
-                
+
+
+                    x+=1
+                        
+
+                file1.cd()
+                tree1.Write()
+                print("\nEvents in tree1: "+str(tree1.GetEntries()))
                 file1.Close()
+                
+                file2.cd()
+                tree2.Write()
+                print("\nEvents in tree2: "+str(tree2.GetEntries()))
                 file2.Close()
 
+                read_file.Close()
+
+                print("\nRandomisation finished for: "+name)
+
                 
 
-    
 if __name__ == '__main__':
 #    main()
     test()
