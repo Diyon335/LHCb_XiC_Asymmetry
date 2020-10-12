@@ -140,8 +140,6 @@ def main():
             p += 1
             
         if "cluster" in i:
-            for root_file in os.listdir(BASE_PATH+i):
-                os.system("rm {}".format(BASE_PATH+i+"/"+root_file))
             continue
             
         for particle in mother_particle:
@@ -369,6 +367,9 @@ def randomise():
     bins = ["ybins","ptbins","y_ptbins"]
 
     for i in os.listdir(TUPLE_PATH):
+
+        if "cluster" in i:
+            continue
         
         print("\nWorking on "+i+" data")
         
