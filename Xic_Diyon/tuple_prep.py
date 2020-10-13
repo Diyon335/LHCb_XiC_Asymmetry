@@ -364,7 +364,8 @@ def strip_and_save(Min, Max, cuts, directory, saving_directory, extra_variables,
 
 def randomise():
     
-    bins = ["ybins","ptbins","y_ptbins"]
+   #bins = ["ybins","ptbins","y_ptbins"]
+    bins = ["ybins"]
 
     for i in os.listdir(TUPLE_PATH):
 
@@ -398,41 +399,39 @@ def randomise():
                 file1 = ROOT.TFile.Open(TUPLE_PATH+i+"/random_data/dataset1/"+bin_type+"/"+name,"RECREATE")
                 file2 = ROOT.TFile.Open(TUPLE_PATH+i+"/random_data/dataset2/"+bin_type+"/"+name,"RECREATE")
 
-                tree1 = ROOT.TTree("DecayTree","DecayTree")
-                tree2 = ROOT.TTree("DecayTree","DecayTree")
-
                 tree1 = dataTree.CloneTree(0)
+                tree1.SetDirectory(file1)
                 tree2 = dataTree.CloneTree(0)
+                tree2.SetDirectory(file2)
 
                 n = dataTree.GetEntries()
                 x = 0
 
                 
                 for entry in range(dataTree.GetEntries()):
+
+                    dataTree.GetEntry(entry)
+
                     #Progress 
                     if(x%1000==0):
                         j = (x / n)*100
                         sys.stdout.write('\r')
                         sys.stdout.write("{0}%".format(str(int(j))))
                         sys.stdout.flush()
-
-                    if(x==n):
-                        sys.stdout.write("\r")
-                        sys.stdout.write("100%")
-                        sys.stdout.flush()
+                        
                 
                     #50% probability of being added to dataset1 or dataset2
                     if(random.rand()>0.5):
-                        dataTree.GetEntry(entry)
                         tree1.Fill()
                         
                     else:
-                        dataTree.GetEntry(entry)
                         tree2.Fill()
 
-
                     x+=1
-                        
+
+                sys.stdout.write("\r")
+                sys.stdout.write("100%")
+                sys.stdout.flush()
 
                 file1.cd()
                 tree1.Write()
@@ -451,5 +450,5 @@ def randomise():
                 
 
 if __name__ == '__main__':
-    main()
+#    main()
     randomise()
