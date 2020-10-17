@@ -58,7 +58,7 @@ def run():
 
                     saving_directory = TUPLES+i+"/BDT_outputs/"+run_number+"/"+bin_type+"/"
 
-                    print("\nWorking on: "+root_fileroot_file)
+                    print("\nWorking on: "+root_file)
 
                     runMVA(root_file, TUPLES+i+"/bins/"+bin_type+"/"+root_file, saving_directory, weights_file)
 
