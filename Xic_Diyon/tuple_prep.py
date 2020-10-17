@@ -365,8 +365,8 @@ def strip_and_save(Min, Max, cuts, directory, saving_directory, extra_variables,
 
 def randomise():
     
-   #bins = ["ybins","ptbins","y_ptbins"]
-    bins = ["ybins"]
+    bins = ["ybins","ptbins","y_ptbins"]
+
     print ("Beginning randomise")
     for i in os.listdir(TUPLE_PATH):
 
@@ -453,5 +453,5 @@ def randomise():
                 
 
 if __name__ == '__main__':
-    main()
+#    main()
     randomise()
