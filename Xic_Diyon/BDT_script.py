@@ -10,12 +10,12 @@ TUPLES = "/dcache/bfys/dwickrem/test1/"
 random_data = True
 
 #If you run it multiple times
-run_number = "2"
+run_number = "1"
 
 if(random_data):
-    run_number += "_(randomised)"
+    run_number += "_randomised"
 
-weights_file = "TMVAClassification.weights.xml"
+weights_file = "/dcache/bfys/dwickrem/test1/2016_MagDown_blinded/weights/BDT_BDT_BDT_Xic_pKpi_run16_400trees.weights.xml"
 
 def run():
 
@@ -94,10 +94,11 @@ def runMVA(file_name, root_file, saving_directory, weights_file):
 		 "piplus_TRACK_PCHI2",
 		 "kminus_TRACK_PCHI2"]
 
+    
     branches = {}
     for var in variables:
         branch = var
-        branches[branch] = array("f",[0])
+        branches[branch] = array.array("f",[0])
         reader.AddVariable(branch, branches[branch])
 
     reader.BookMVA("BDT method", weights_file)
@@ -111,7 +112,7 @@ def runMVA(file_name, root_file, saving_directory, weights_file):
     output_branches = {}
     for variable in output_vars:
         output_branch = variable
-        output_branches[output_branch] = array("f",[0])
+        output_branches[output_branch] = array.array("f",[0])
         
         if(variable != "BDT_response"):
             read_file.cd()
@@ -120,6 +121,7 @@ def runMVA(file_name, root_file, saving_directory, weights_file):
         save_file.cd()
         tree.Branch(output_branch, output_branches[output_branch])
 
+    
     #Evaluate BDT response for all entries
     read_file.cd()
     x = 0
