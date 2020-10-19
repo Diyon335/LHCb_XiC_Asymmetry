@@ -3,15 +3,31 @@
 #
 # Authors: Simon Calo, Jonas Tjepkema, Diyon Wickremeratne
 ##########################
+
 import ROOT, os, Imports, sys, numpy, time
 from ROOT import TChain, TFile, TTree
 from Imports import TUPLE_PATH, RAW_TUPLE_PATH, DATA_jobs_Dict
 from numpy import random
+from write_descriptions import makeFile, appendBins, appendVars, writeStartOfRandomisation, appendTreeAnalysis, appendTimeElapsed
+
+#This method automatically gets the number of times you have run this script
+def getRun():
+    PATH = TUPLE_PATH
+    runs = []
+    if (len(os.listdir(PATH))==0):
+        run = 1
+        return "run_"+str(run)
+    else:
+        for i in os.listdir(PATH):
+            string = i.split("_")
+            runs.append(int(string[1]))
+        return "run_"+str(numpy.max(runs)+1)
 
 #Main function
-def main():
+def main(script_run):
     print ("Starting main")
-    #If you want to test on a small portion of data, then enable it here
+
+    #If you want to test on a small portion of data, then enable it here and add the data to the dictionary below
     TESTING = True
 
     if(TESTING):
@@ -21,12 +37,14 @@ def main():
         folders_dict = DATA_jobs_Dict
     
     #Path to save the tuples
-    PATH = TUPLE_PATH
+    PATH = TUPLE_PATH+script_run+"/"
 
     if not os.path.exists(PATH):
         os.makedirs(PATH)
     
     blind_data = True
+
+    makeFile(PATH, script_run, dictionary = folders_dict, blinded = blind_data)
     
     for element in folders_dict:
         if int(element) > 41 and int(element) < 47:
@@ -127,12 +145,16 @@ def main():
     
     mother_particle = ["Xic","Lc"]
     
-    BASE_PATH = TUPLE_PATH
+    BASE_PATH = TUPLE_PATH+script_run+"/"
     
     n = len(os.listdir(BASE_PATH))
     p = 0 
     
     for i in os.listdir(BASE_PATH):
+
+        if "description" in i:
+            continue
+
         if (p < n):
             j = (p + 1) / n
             sys.stdout.write('\r')
@@ -171,7 +193,7 @@ def setBranch_function(root_file, extra_variables, blinded = False):
     useful_variables = []
     
     if(blinded):
-        #Might need to take off some variables?
+
         variables = ["lcplus_MM", 
                        "lcplus_P", 
                        "lcplus_PT", 
@@ -182,6 +204,7 @@ def setBranch_function(root_file, extra_variables, blinded = False):
                        "lcplus_OWNPV_CHI2", 
                        "lcplus_TAU",
                        "lcplus_L0HadronDecision_TOS", 
+                       "lcplus_FD_OWNPV",
                        "pplus_M", 
                        "pplus_P", 
                        "pplus_PT",
@@ -194,6 +217,7 @@ def setBranch_function(root_file, extra_variables, blinded = False):
                        "piplus_RAPIDITY",
                        "piplus_ETA",
                        "piplus_ProbNNpi",
+                       "piplus_IP_OWNPV",
                        "pplus_PIDp",
                        "kminus_M",
                        "kminus_P", 
@@ -201,7 +225,22 @@ def setBranch_function(root_file, extra_variables, blinded = False):
                        "kminus_RAPIDITY",
                        "kminus_ETA",
                        "kminus_ProbNNk", 
-                       "kminus_PIDK", "PVNTRACKS", "piplus_PX", "pplus_PX", "kminus_PX", "piplus_PY", "pplus_PY", "kminus_PY", "piplus_PZ", "pplus_PZ", "kminus_PZ"]
+                       "kminus_PIDK", 
+                       "PVNTRACKS",
+                       "piplus_PX", 
+                       "pplus_PX", 
+                       "kminus_PX", 
+                       "piplus_PY", 
+                       "pplus_PY", 
+                       "kminus_PY", 
+                       "piplus_PZ", 
+                       "pplus_PZ", 
+                       "kminus_PZ",
+                       "pplus_IP_OWNPV",
+                       "kminus_IP_OWNPV",
+                       "kminus_IPCHI2_OWNPV",
+                       "piplus_IPCHI2_OWNPV",
+                       "pplus_IPCHI2_OWNPV"]
 
         useful_variables = variables
         
@@ -216,6 +255,7 @@ def setBranch_function(root_file, extra_variables, blinded = False):
                        "lcplus_OWNPV_CHI2", 
                        "lcplus_TAU",
                        "lcplus_L0HadronDecision_TOS", 
+                       "lcplus_FD_OWNPV",
                        "pplus_M", 
                        "pplus_P", 
                        "pplus_PT",
@@ -233,9 +273,25 @@ def setBranch_function(root_file, extra_variables, blinded = False):
                        "kminus_P", 
                        "kminus_PT", 
                        "kminus_RAPIDITY",
+                       "piplus_IP_OWNPV",
                        "kminus_ETA",
                        "kminus_ProbNNk", 
-                       "kminus_PIDK", "PVNTRACKS", "piplus_PX", "pplus_PX", "kminus_PX", "piplus_PY", "pplus_PY", "kminus_PY", "piplus_PZ", "pplus_PZ", "kminus_PZ"]
+                       "kminus_PIDK",
+                       "PVNTRACKS", 
+                       "piplus_PX", 
+                       "pplus_PX", 
+                       "kminus_PX", 
+                       "piplus_PY",
+                       "pplus_PY", 
+                       "kminus_PY", 
+                       "piplus_PZ",
+                       "pplus_PZ", 
+                       "kminus_PZ",
+                       "pplus_IP_OWNPV",
+                       "kminus_IP_OWNPV",
+                       "kminus_IPCHI2_OWNPV",
+                       "piplus_IPCHI2_OWNPV",
+                       "pplus_IPCHI2_OWNPV"]
 
         useful_variables = variables
         
@@ -243,7 +299,7 @@ def setBranch_function(root_file, extra_variables, blinded = False):
         if not (extra_variable == ""):
             #If an extra variable is needed, it will be appended
             useful_variables.append(extra_variable)
-            
+
     #Depends on the type of file being fed into the function
     tfile = root_file
     #First deactivate all branches
@@ -313,12 +369,12 @@ def split_in_bins_and_save(root_file, saving_directory, run, mother_particle = "
             
             if (ybin[0]==2.0):
                 allcuts = " {0} && {1}".format(ptcuts, mass_cuts)
-                strip_and_save(0,0, allcuts, "", saving_directory + "ptbins/" + particle + "_ptbin_{0}-{1}.root".format(ptbin[0], ptbin[1]), extra_variables, particle, bins = True,tree = tree, blinded = blind_data)
+                strip_and_save(0, 0, allcuts, "", saving_directory + "ptbins/" + particle + "_ptbin_{0}-{1}.root".format(ptbin[0], ptbin[1]), extra_variables, particle, bins = True,tree = tree, blinded = blind_data)
                 
             ypt_cut = ycuts+"&&"+ptcuts
             allcuts = "{0} && {1}".format(ypt_cut, mass_cuts)
             
-            strip_and_save(0,0, allcuts, "", saving_directory + "y_ptbins/" + particle + "_ybin_{0}-{1}_ptbin_{2}-{3}.root".format(ybin[0],ybin[1],ptbin[0],ptbin[1]), extra_variables, particle, bins = True, tree = tree, blinded = blind_data)
+            strip_and_save(0, 0, allcuts, "", saving_directory + "y_ptbins/" + particle + "_ybin_{0}-{1}_ptbin_{2}-{3}.root".format(ybin[0],ybin[1],ptbin[0],ptbin[1]), extra_variables, particle, bins = True, tree = tree, blinded = blind_data)
             
         print("\n")
         
@@ -363,12 +419,20 @@ def strip_and_save(Min, Max, cuts, directory, saving_directory, extra_variables,
     subtree.Write()
     wfile.Close()
 
-def randomise():
+def randomise(script_run):
     
     bins = ["ybins","ptbins","y_ptbins"]
 
     print ("Beginning randomise")
-    for i in os.listdir(TUPLE_PATH):
+
+    PATH = TUPLE_PATH+script_run+"/"
+
+    writeStartOfRandomisation(PATH, script_run)
+
+    for i in os.listdir(PATH):
+
+        if "description" in i:
+            continue
 
         if "cluster" in i:
             continue
@@ -380,25 +444,25 @@ def randomise():
             print("\nFor the "+bin_type)
 
             ##DATASET1
-            if not os.path.exists(TUPLE_PATH+i+"/random_data/dataset1/"+bin_type+"/"): 
-                os.makedirs(TUPLE_PATH+i+"/random_data/dataset1/"+bin_type+"/")
+            if not os.path.exists(PATH+i+"/random_data/dataset1/"+bin_type+"/"): 
+                os.makedirs(PATH+i+"/random_data/dataset1/"+bin_type+"/")
 
             ##DATASET2
-            if not os.path.exists(TUPLE_PATH+i+"/random_data/dataset2/"+bin_type+"/"): 
-                os.makedirs(TUPLE_PATH+i+"/random_data/dataset2/"+bin_type+"/")
+            if not os.path.exists(PATH+i+"/random_data/dataset2/"+bin_type+"/"): 
+                os.makedirs(PATH+i+"/random_data/dataset2/"+bin_type+"/")
 
         
-            for root_file in os.listdir(TUPLE_PATH+i+"/bins/"+bin_type+"/"):
+            for root_file in os.listdir(PATH+i+"/bins/"+bin_type+"/"):
                 
                 print("\nRandomising: "+root_file)
 
                 name = root_file
 
-                read_file = ROOT.TFile(TUPLE_PATH+i+"/bins/"+bin_type+"/"+name, "READ")
+                read_file = ROOT.TFile(PATH+i+"/bins/"+bin_type+"/"+name, "READ")
                 dataTree = read_file.Get("DecayTree")
 
-                file1 = ROOT.TFile.Open(TUPLE_PATH+i+"/random_data/dataset1/"+bin_type+"/"+name,"RECREATE")
-                file2 = ROOT.TFile.Open(TUPLE_PATH+i+"/random_data/dataset2/"+bin_type+"/"+name,"RECREATE")
+                file1 = ROOT.TFile.Open(PATH+i+"/random_data/dataset1/"+bin_type+"/"+name,"RECREATE")
+                file2 = ROOT.TFile.Open(PATH+i+"/random_data/dataset2/"+bin_type+"/"+name,"RECREATE")
                 file1.cd()
                 tree1 = dataTree.CloneTree(0)
                 file2.cd()
@@ -433,8 +497,10 @@ def randomise():
                 sys.stdout.write("\r")
                 sys.stdout.write("100%")
                 sys.stdout.flush()
+
+                appendTreeAnalysis(PATH, script_run, name, dataTree.GetEntries(), tree1.GetEntries(),tree2.GetEntries())
+
                 tree1.SetName("DecayTree")
-                
                 file1.cd()
                 tree1.Write("",ROOT.TObject.kOverwrite)
                 print("\nEvents in tree1: "+str(tree1.GetEntries()))
@@ -453,5 +519,12 @@ def randomise():
                 
 
 if __name__ == '__main__':
-#    main()
-    randomise()
+
+    start = time.time()
+
+    script_run = getRun()
+
+    main(script_run)
+    randomise(script_run)
+
+    appendTimeElapsed(TUPLE_PATH+script_run+"/" , script_run, (time.time() - start))

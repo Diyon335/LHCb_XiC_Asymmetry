@@ -15,7 +15,7 @@ run_number = "1"
 if(random_data):
     run_number += "_randomised"
 
-weights_file = "/dcache/bfys/dwickrem/test1/2016_MagDown_blinded/weights/BDT_BDT_BDT_Xic_pKpi_run16_400trees.weights.xml"
+weights_file = "/data/bfys/dwickrem/weights/BDT_BDT_BDT_Xic_pKpi_run21_100trees.weights.xml"
 
 def run():
 
