@@ -152,15 +152,15 @@ def main(script_run):
     
     for i in os.listdir(BASE_PATH):
 
-        if "description" in i:
-            continue
-
         if (p < n):
             j = (p + 1) / n
             sys.stdout.write('\r')
             sys.stdout.write("[%-20s] %d%%" % ('='*int(20*j), 100*j))
             sys.stdout.flush()
             p += 1
+
+        if "description" in i:
+            continue
             
         if "cluster" in i:
             continue

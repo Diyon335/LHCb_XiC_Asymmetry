@@ -4,16 +4,13 @@ from ROOT import TFile, TTree
 ROOT.TMVA.Tools.Instance()
 
 #Where you store your tuples
-TUPLES = "/dcache/bfys/dwickrem/test1/"
+TUPLES = "/data/bfys/dwickrem/tuples/"
 
 #True if running on randomised data, else on regular data
 random_data = True
 
-#If you run it multiple times
-run_number = "1"
-
-if(random_data):
-    run_number += "_randomised"
+#Specify the run you want to apply the BDT to
+run_number = "run_1"
 
 weights_file = "/data/bfys/dwickrem/weights/BDT_BDT_BDT_Xic_pKpi_run21_100trees.weights.xml"
 
@@ -21,10 +18,13 @@ def run():
 
     print("\nBeginning the BDT script")
     
-    for i in os.listdir(TUPLES):
+    for i in os.listdir(TUPLES+run_number+"/"):
 
         #Ignore folders of clusters that may have not been deleted
         if "cluster" in i:
+            continue
+
+        if "description" in i:
             continue
 
         if(random_data):
@@ -92,7 +92,18 @@ def runMVA(file_name, root_file, saving_directory, weights_file):
 		 "kminus_ProbNNk",
 		 "pplus_TRACK_PCHI2",
 		 "piplus_TRACK_PCHI2",
-		 "kminus_TRACK_PCHI2"]
+		 "kminus_TRACK_PCHI2",
+                 "log(lcplus_FD_OWNPV)",
+                 "log(pplus_PT)",
+                 "log(piplus_IP_OWNPV)",
+                 "log(pplus_IP_OWNPV)",
+                 "log(kminus_IP_OWNPV)",
+                 "log(kminus_PT)",
+                 "log(piplus_PT)",
+                 "log(lcplus_PT)",
+                 "log(kminus_IPCHI2_OWNPV)",
+                 "log(piplus_IPCHI2_OWNPV)",
+                 "log(pplus_IPCHI2_OWNPV)"]
 
     
     branches = {}
@@ -106,8 +117,55 @@ def runMVA(file_name, root_file, saving_directory, weights_file):
     for var in variables:
         dataTree.SetBranchAddress(var, branches[var])
 
-    #The variables you want in the output file to be viewed later. The BDT response must be in this list
-    output_vars = ["lcplus_MM","BDT_response"]
+    #The variables you want in the output file to be viewed later. The BDT response must be in this list (maybe at the end)
+    output_vars =     ["lcplus_MM", 
+                       "lcplus_P", 
+                       "lcplus_PT", 
+                       "lcplus_ETA",
+                       "lcplus_RAPIDITY", 
+                       "lcplus_TIP", 
+                       "lcplus_IPCHI2_OWNPV", 
+                       "lcplus_OWNPV_CHI2", 
+                       "lcplus_TAU",
+                       "lcplus_L0HadronDecision_TOS", 
+                       "lcplus_FD_OWNPV",
+                       "pplus_M", 
+                       "pplus_P", 
+                       "pplus_PT",
+                       "pplus_RAPIDITY", 
+                       "pplus_ETA",
+                       "pplus_ProbNNp",
+                       "piplus_M",
+                       "piplus_P", 
+                       "piplus_PT", 
+                       "piplus_RAPIDITY",
+                       "piplus_ETA",
+                       "piplus_ProbNNpi",
+                       "piplus_IP_OWNPV",
+                       "pplus_PIDp",
+                       "kminus_M",
+                       "kminus_P", 
+                       "kminus_PT", 
+                       "kminus_RAPIDITY",
+                       "kminus_ETA",
+                       "kminus_ProbNNk", 
+                       "kminus_PIDK", 
+                       "PVNTRACKS",
+                       "piplus_PX", 
+                       "pplus_PX", 
+                       "kminus_PX", 
+                       "piplus_PY", 
+                       "pplus_PY", 
+                       "kminus_PY", 
+                       "piplus_PZ", 
+                       "pplus_PZ", 
+                       "kminus_PZ",
+                       "pplus_IP_OWNPV",
+                       "kminus_IP_OWNPV",
+                       "kminus_IPCHI2_OWNPV",
+                       "piplus_IPCHI2_OWNPV",
+                       "pplus_IPCHI2_OWNPV",
+                       "BDT_response"]
 
     output_branches = {}
     for variable in output_vars:
@@ -157,6 +215,21 @@ def runMVA(file_name, root_file, saving_directory, weights_file):
 
 if __name__ == '__main__':
     
-    run()
+    if(len(sys.argv) == 3):
+
+        root_file = sys.argv[1]
+
+        strings = root_file.split("/")
+        index = len(strings)-1
+        name = strings[index]
+
+        saving_directory = sys.argv[2]
+
+        wf = weights_file
+
+        runMVA(name, root_file, saving_directory, wf)
+
+    else:
+        run()
 
 
