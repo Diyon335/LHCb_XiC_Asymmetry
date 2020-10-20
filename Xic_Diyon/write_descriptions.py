@@ -47,9 +47,10 @@ def writeStartOfRandomisation(path, run):
     
     
     
-def appendTreeAnalysis(path, run, file_name, totalEvents, tree1Events, tree2Events):
+def appendTreeAnalysis(path, run, data_folder, file_name, totalEvents, tree1Events, tree2Events):
     tfile = open(path+"{}_description.txt".format(run), "a")
     
+    tfile.write("\n** FOR {} DATA **".format(data_folder))
     tfile.write("\n * {}".format(file_name))
     tfile.write("\n Total events: {}".format(str(totalEvents)))
     tfile.write("\nEvents in tree1: {}".format(str(tree1Events)))

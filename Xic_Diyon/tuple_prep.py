@@ -498,7 +498,7 @@ def randomise(script_run):
                 sys.stdout.write("100%")
                 sys.stdout.flush()
 
-                appendTreeAnalysis(PATH, script_run, name, dataTree.GetEntries(), tree1.GetEntries(),tree2.GetEntries())
+                appendTreeAnalysis(PATH, script_run, i,  name, dataTree.GetEntries(), tree1.GetEntries(),tree2.GetEntries())
 
                 tree1.SetName("DecayTree")
                 file1.cd()

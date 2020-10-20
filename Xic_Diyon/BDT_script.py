@@ -1,4 +1,4 @@
-import ROOT, os, sys, array
+import ROOT, os, sys, array, numpy
 from ROOT import TFile, TTree
 
 ROOT.TMVA.Tools.Instance()
@@ -72,7 +72,7 @@ def runMVA(file_name, root_file, saving_directory, weights_file):
     dataTree = read_file.Get("DecayTree")
 
     save_file = ROOT.TFile(saving_directory+file_name, "RECREATE")
-    tree = ROOT.TTree("DecayTree","DecayTree")
+    tree = dataTree.CloneTree(0)
 
     reader =  ROOT.TMVA.Reader("V:Color:!Silent")
     
@@ -110,6 +110,8 @@ def runMVA(file_name, root_file, saving_directory, weights_file):
     for var in variables:
         branch = var
         branches[branch] = array.array("f",[0])
+        print(branch)
+        print(branches[branch])
         reader.AddVariable(branch, branches[branch])
 
     reader.BookMVA("BDT method", weights_file)
@@ -194,7 +196,7 @@ def runMVA(file_name, root_file, saving_directory, weights_file):
         
         dataTree.GetEntry(i)
 
-        reader.EvaluateMVA("BDT method")
+        output_brances["BDT_response"] = reader.EvaluateMVA("BDT method")
 
         save_file.cd()
         tree.Fill()
