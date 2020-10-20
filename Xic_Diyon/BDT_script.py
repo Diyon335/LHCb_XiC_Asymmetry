@@ -1,35 +1,47 @@
+"""
+BDT_script.py
+
+This script uses a weights file from a trained BDT to reduce background events from a root file
+
+Based on an existing tutorial, originally written in C++
+
+Author: Diyon Wickremeratne
+"""
+
 import ROOT, os, sys, array, numpy
 from ROOT import TFile, TTree
 
-ROOT.TMVA.Tools.Instance()
+"""
 
-#Where you store your tuples
-TUPLES = "/data/bfys/dwickrem/tuples/"
+The Main function that will carry out automated analysis
 
-#True if running on randomised data, else on regular data
-random_data = True
-
-#Specify the run you want to apply the BDT to
-run_number = "run_1"
-
-weights_file = "/data/bfys/dwickrem/weights/BDT_BDT_BDT_Xic_pKpi_run21_100trees.weights.xml"
-
-def getList(length):
-    aList = []
-    for i in range(length-1):
-        aList.append(0)
-    return aList
-
+"""
 def run():
 
-    print("\nBeginning the BDT script")
+    ROOT.TMVA.Tools.Instance()
+
+    #Where you store your tuples
+    TUPLES = "/data/bfys/dwickrem/tuples/"
     
-    for i in os.listdir(TUPLES+run_number+"/"):
+    #True if running on randomised data, else on regular data
+    random_data = True
+
+    #Specify the run you want to apply the BDT to
+    run_number = "run_1"
+
+    weights_file = "/data/bfys/dwickrem/weights/BDT_BDT_BDT_Xic_pKpi_run21_100trees.weights.xml"
+
+    print("\nBeginning the BDT script")
+
+    TUPLES += run_number+"/"
+    
+    for i in os.listdir(TUPLES):
 
         #Ignore folders of clusters that may have not been deleted
         if "cluster" in i:
             continue
 
+        #Ignore text files
         if "description" in i:
             continue
 
@@ -69,16 +81,17 @@ def run():
                     runMVA(root_file, TUPLES+i+"/bins/"+bin_type+"/"+root_file, saving_directory, weights_file)
 
         
+"""
 
+This function carries out the TMVA analysis
 
-#Takes in a root file, and runs through the BDT
+Parameters are a file name, the root file to analyse, where you want to save it and finally the weights file you want to use
+
+"""
 def runMVA(file_name, root_file, saving_directory, weights_file):
-
+    
     read_file = ROOT.TFile(root_file, "READ")
     dataTree = read_file.Get("DecayTree")
-
-    save_file = ROOT.TFile(saving_directory+"BDT_"+file_name, "RECREATE")
-    tree = dataTree.CloneTree(0)
 
     reader =  ROOT.TMVA.Reader("V:Color:!Silent")
     
@@ -111,23 +124,15 @@ def runMVA(file_name, root_file, saving_directory, weights_file):
                  "log(piplus_IPCHI2_OWNPV)",
                  "log(pplus_IPCHI2_OWNPV)"]
 
-    
-    branches = {}
-    for var in variables:
-        branch = var
-        branches[branch] = array.array("f",[0])
-        reader.AddVariable(branch, branches[branch])
+    n = 0
+    for variable in variables:
+        exec("var"+str(n)+" = array.array(\"f\",[0])")
+        exec("reader.AddVariable(\""+variable+"\",var"+str(n)+")")
+        n+=1
 
     reader.BookMVA("BDT method", weights_file)
-    
-    bdt_vars = {}
-    for v in variables:
-        bdt_var = v
-        bdt_vars[bdt_var] = array.array("f",[0])
-        dataTree.SetBranchAddress(v, bdt_vars[bdt_var])
 
-    #The variables you want in the output file to be viewed later. The BDT response must be in this list (maybe at the end)
-    output_vars =     ["lcplus_MM", 
+    dataSample_vars =  ["lcplus_MM", 
                        "lcplus_P", 
                        "lcplus_PT", 
                        "lcplus_ETA",
@@ -136,14 +141,19 @@ def runMVA(file_name, root_file, saving_directory, weights_file):
                        "lcplus_IPCHI2_OWNPV", 
                        "lcplus_OWNPV_CHI2", 
                        "lcplus_TAU",
+                       "lcplus_IP_OWNPV",
                        "lcplus_L0HadronDecision_TOS", 
                        "lcplus_FD_OWNPV",
+                       "lcplus_ENDVERTEX_CHI2",
                        "pplus_M", 
                        "pplus_P", 
                        "pplus_PT",
                        "pplus_RAPIDITY", 
                        "pplus_ETA",
                        "pplus_ProbNNp",
+                       "pplus_OWNPV_CHI2",
+                       "kminus_OWNPV_CHI2",
+                       "piplus_OWNPV_CHI2",
                        "piplus_M",
                        "piplus_P", 
                        "piplus_PT", 
@@ -174,46 +184,119 @@ def runMVA(file_name, root_file, saving_directory, weights_file):
                        "kminus_IPCHI2_OWNPV",
                        "piplus_IPCHI2_OWNPV",
                        "pplus_IPCHI2_OWNPV",
-                       "BDT_response"]
+                       "pplus_TRACK_PCHI2",
+                       "piplus_TRACK_PCHI2",
+		       "kminus_TRACK_PCHI2",
+                       "lcplus_Hlt1TrackMVADecision_TOS"]
 
-    output_branches = {}
-    for variable in output_vars:
-        output_branch = variable
-        output_branches[output_branch] = array.array("f",[0])
-
-        print(output_branch)
-        print(output_branches[output_branch]) 
-        
-        if(variable != "BDT_response"):
-            dataTree.SetBranchAddress(output_branch , output_branches[output_branch])
-
-        tree.Branch(output_branch, output_branches[output_branch])
-
-    
-    #Evaluate BDT response for all entries
-    read_file.cd()
     x = 0
-    n = dataTree.GetEntries()
-    for i in dataTree.GetEntries():
+    for var in dataSample_vars:
+        exec("dsvar"+str(x)+" = array.array(\"i\",[0])")
+        exec("dataTree.SetBranchAddress(\""+var+"\", dsvar"+str(x)+")")
+        x+=1
 
-        if(x%1000==0):
-            j = (x / n)*100
+    MVAOutput = numpy.zeros(1, dtype = float)
+
+    save_file = ROOT.TFile(saving_directory+"BDT_"+file_name, "RECREATE")
+    tree = dataTree.CopyTree("0")
+
+    output_vars = [    "lcplus_MM", 
+                       "lcplus_P", 
+                       "lcplus_PT", 
+                       "lcplus_ETA",
+                       "lcplus_RAPIDITY", 
+                       "lcplus_TIP", 
+                       "lcplus_IPCHI2_OWNPV", 
+                       "lcplus_OWNPV_CHI2", 
+                       "lcplus_TAU",
+                       "lcplus_IP_OWNPV",
+                       "lcplus_L0HadronDecision_TOS", 
+                       "lcplus_FD_OWNPV",
+                       "lcplus_ENDVERTEX_CHI2",
+                       "pplus_M", 
+                       "pplus_P", 
+                       "pplus_PT",
+                       "pplus_RAPIDITY", 
+                       "pplus_ETA",
+                       "pplus_ProbNNp",
+                       "pplus_OWNPV_CHI2",
+                       "kminus_OWNPV_CHI2",
+                       "piplus_OWNPV_CHI2",
+                       "piplus_M",
+                       "piplus_P", 
+                       "piplus_PT", 
+                       "piplus_RAPIDITY",
+                       "piplus_ETA",
+                       "piplus_ProbNNpi",
+                       "piplus_IP_OWNPV",
+                       "pplus_PIDp",
+                       "kminus_M",
+                       "kminus_P", 
+                       "kminus_PT", 
+                       "kminus_RAPIDITY",
+                       "kminus_ETA",
+                       "kminus_ProbNNk", 
+                       "kminus_PIDK", 
+                       "PVNTRACKS",
+                       "piplus_PX", 
+                       "pplus_PX", 
+                       "kminus_PX", 
+                       "piplus_PY", 
+                       "pplus_PY", 
+                       "kminus_PY", 
+                       "piplus_PZ", 
+                       "pplus_PZ", 
+                       "kminus_PZ",
+                       "pplus_IP_OWNPV",
+                       "kminus_IP_OWNPV",
+                       "kminus_IPCHI2_OWNPV",
+                       "piplus_IPCHI2_OWNPV",
+                       "pplus_IPCHI2_OWNPV",
+                       "pplus_TRACK_PCHI2",
+                       "piplus_TRACK_PCHI2",
+		       "kminus_TRACK_PCHI2",
+                       "lcplus_Hlt1TrackMVADecision_TOS"]
+
+
+    a = 0
+    for ovar in output_vars:
+        exec("output"+str(a)+" = numpy.zeros(1, dtype = float)")
+        exec("dataTree.SetBranchAddress(\""+ovar+"\", output"+str(a)+")")
+        exec("tree.Branch(\""+ovar+"\" , output"+str(a)+",\""+ovar+"/D\")")
+        a+=1
+
+
+    tree.Branch("BDT_output",MVAOutput,"BDT_response/D")
+
+    b = 0
+    c = dataTree.GetEntries()
+    for i in range(dataTree.GetEntries()):
+
+        if(b%1000==0):
+            k = (b / c)*100
             sys.stdout.write('\r')
-            sys.stdout.write("{0}%".format(str(int(j))))
+            sys.stdout.write("{0}%".format(str(int(k))))
             sys.stdout.flush()
         
         dataTree.GetEntry(i)
+        
+        m = 0
+        for var in dataSample_vars:
+            exec("dsvar"+str(m)+"[0] = tree."+var)
+            m+=1
 
-        output_brances["BDT_response"] = reader.EvaluateMVA("BDT method")
+        MVAOutput[0] = reader.EvaluateMVA("BDT method")
 
-        save_file.cd()
         tree.Fill()
+
+        i+=1
 
     sys.stdout.write('\r')
     sys.stdout.write("100%")
     sys.stdout.flush()
     
     save_file.cd()
+    save_file.Write("",ROOT.TObject.kOverwrite)
     tree.SetName("DecayTree")
     tree.Write("",ROOT.TObject.kOverwrite)
 
@@ -221,7 +304,13 @@ def runMVA(file_name, root_file, saving_directory, weights_file):
     read_file.Close()
 
 
+"""
 
+There is an option to run it on one particular root file by entering the appropriate arguments after the python command.
+
+Usage: >python BDT_script.py <path to root file> <saving directoy>
+
+"""
 
 if __name__ == '__main__':
     

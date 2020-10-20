@@ -1,3 +1,10 @@
+"""
+This script exists to write an automated description covering the important steps of tuple preparation
+
+
+Author: Diyon Wickremeratne
+"""
+
 def makeFile(path, run, dictionary = None, blinded = False):
     tfile = open(path+"{}_description.txt".format(run), "x")
     tfile.write("This is an auto-generated description file for: {}".format(run))
