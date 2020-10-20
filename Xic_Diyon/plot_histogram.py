@@ -1,6 +1,6 @@
 import ROOT, sys
 
-#Minimal configurisation for this method
+#Minimal configuration for this method
 def plotSimpleHist(variable, root_file, out_directory):
     print("Plotting...")
     bins = 300
