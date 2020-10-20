@@ -34,6 +34,9 @@ def plotSimpleHist(variable, root_file, out_directory):
     c.Update()
     c.Draw()
     c.Print(outFile, "PDF")
+
+    rfile.Close()
+
     print("Done!")
     return
 

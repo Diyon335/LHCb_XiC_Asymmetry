@@ -14,6 +14,12 @@ run_number = "run_1"
 
 weights_file = "/data/bfys/dwickrem/weights/BDT_BDT_BDT_Xic_pKpi_run21_100trees.weights.xml"
 
+def getList(length):
+    aList = []
+    for i in range(length-1):
+        aList.append(0)
+    return aList
+
 def run():
 
     print("\nBeginning the BDT script")
@@ -71,7 +77,7 @@ def runMVA(file_name, root_file, saving_directory, weights_file):
     read_file = ROOT.TFile(root_file, "READ")
     dataTree = read_file.Get("DecayTree")
 
-    save_file = ROOT.TFile(saving_directory+file_name, "RECREATE")
+    save_file = ROOT.TFile(saving_directory+"BDT_"+file_name, "RECREATE")
     tree = dataTree.CloneTree(0)
 
     reader =  ROOT.TMVA.Reader("V:Color:!Silent")
@@ -110,14 +116,15 @@ def runMVA(file_name, root_file, saving_directory, weights_file):
     for var in variables:
         branch = var
         branches[branch] = array.array("f",[0])
-        print(branch)
-        print(branches[branch])
         reader.AddVariable(branch, branches[branch])
 
     reader.BookMVA("BDT method", weights_file)
-
-    for var in variables:
-        dataTree.SetBranchAddress(var, branches[var])
+    
+    bdt_vars = {}
+    for v in variables:
+        bdt_var = v
+        bdt_vars[bdt_var] = array.array("f",[0])
+        dataTree.SetBranchAddress(v, bdt_vars[bdt_var])
 
     #The variables you want in the output file to be viewed later. The BDT response must be in this list (maybe at the end)
     output_vars =     ["lcplus_MM", 
@@ -173,12 +180,13 @@ def runMVA(file_name, root_file, saving_directory, weights_file):
     for variable in output_vars:
         output_branch = variable
         output_branches[output_branch] = array.array("f",[0])
+
+        print(output_branch)
+        print(output_branches[output_branch]) 
         
         if(variable != "BDT_response"):
-            read_file.cd()
             dataTree.SetBranchAddress(output_branch , output_branches[output_branch])
 
-        save_file.cd()
         tree.Branch(output_branch, output_branches[output_branch])
 
     
