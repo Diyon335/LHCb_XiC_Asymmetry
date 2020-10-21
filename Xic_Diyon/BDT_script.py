@@ -191,7 +191,7 @@ def runMVA(file_name, root_file, saving_directory, weights_file):
 
     x = 0
     for var in dataSample_vars:
-        exec("dsvar"+str(x)+" = array.array(\"i\",[0])")
+        exec("dsvar"+str(x)+" = array.array(\"f\",[0])")
         exec("dataTree.SetBranchAddress(\""+var+"\", dsvar"+str(x)+")")
         x+=1
 
@@ -275,13 +275,18 @@ def runMVA(file_name, root_file, saving_directory, weights_file):
         if(b%1000==0):
             k = (b / c)*100
             sys.stdout.write('\r')
-            sys.stdout.write("{0}%".format(str(int(k))))
+            sys.stdout.write("{0} of {1} events evaluated".format(str(b),str(c)))
+            sys.stdout.write("Progress: {0}%".format(str(int(k))))
             sys.stdout.flush()
         
         dataTree.GetEntry(i)
         
         m = 0
         for var in dataSample_vars:
+
+            if "PVNTRACKS" in var:
+                continue
+
             exec("dsvar"+str(m)+"[0] = tree."+var)
             m+=1
 
@@ -289,10 +294,10 @@ def runMVA(file_name, root_file, saving_directory, weights_file):
 
         tree.Fill()
 
-        i+=1
+        b+=1
 
     sys.stdout.write('\r')
-    sys.stdout.write("100%")
+    sys.stdout.write("Progress: 100%")
     sys.stdout.flush()
     
     save_file.cd()
@@ -324,7 +329,7 @@ if __name__ == '__main__':
 
         saving_directory = sys.argv[2]
 
-        wf = weights_file
+        wf = "/data/bfys/dwickrem/weights/BDT_BDT_BDT_Xic_pKpi_run21_100trees.weights.xml"
 
         runMVA(name, root_file, saving_directory, wf)
 
