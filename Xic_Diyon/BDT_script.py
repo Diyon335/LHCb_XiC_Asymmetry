@@ -275,7 +275,6 @@ def runMVA(file_name, root_file, saving_directory, weights_file):
         if(b%1000==0):
             k = (b / c)*100
             sys.stdout.write('\r')
-            sys.stdout.write("{0} of {1} events evaluated".format(str(b),str(c)))
             sys.stdout.write("Progress: {0}%".format(str(int(k))))
             sys.stdout.flush()
         
