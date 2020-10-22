@@ -9,8 +9,6 @@ Usage: >python plot_histogram.py  <var> <file> <saving directory>
 
 Author: Diyon Wickremeratne
 """
-
-
 import ROOT, sys
 
 """
@@ -21,7 +19,7 @@ This function takes in a variable name, a root file to get this variable from an
 def plotSimpleHist(variable, root_file, out_directory):
     print("Plotting...")
     bins = 300
-    hRange = [-0.7,0.5]
+    hRange = [2360,2570]
     lineCol = 4
     xTitle = "Mass MeV/c^{2}"
     yTitle = "Candidates"
