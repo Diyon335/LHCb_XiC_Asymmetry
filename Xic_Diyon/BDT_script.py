@@ -112,17 +112,17 @@ def runMVA(file_name, root_file, saving_directory, weights_file):
 		 "pplus_TRACK_PCHI2",
 		 "piplus_TRACK_PCHI2",
 		 "kminus_TRACK_PCHI2",
-                 "log(lcplus_FD_OWNPV)",
-                 "log(pplus_PT)",
-                 "log(piplus_IP_OWNPV)",
-                 "log(pplus_IP_OWNPV)",
-                 "log(kminus_IP_OWNPV)",
-                 "log(kminus_PT)",
-                 "log(piplus_PT)",
-                 "log(lcplus_PT)",
-                 "log(kminus_IPCHI2_OWNPV)",
-                 "log(piplus_IPCHI2_OWNPV)",
-                 "log(pplus_IPCHI2_OWNPV)"]
+                 "log(lcplus_FD_OWNPV)",     #16
+                 "log(pplus_PT)",            #17
+                 "log(piplus_IP_OWNPV)",     #18
+                 "log(pplus_IP_OWNPV)",      #19
+                 "log(kminus_IP_OWNPV)",     #20
+                 "log(kminus_PT)",           #21
+                 "log(piplus_PT)",           #22
+                 "log(lcplus_PT)",           #23
+                 "log(kminus_IPCHI2_OWNPV)", #24
+                 "log(piplus_IPCHI2_OWNPV)", #25
+                 "log(pplus_IPCHI2_OWNPV)"]  #26
 
     n = 0
     for variable in variables:
@@ -132,62 +132,33 @@ def runMVA(file_name, root_file, saving_directory, weights_file):
 
     reader.BookMVA("BDT method", weights_file)
 
-    dataSample_vars =  ["lcplus_MM", 
-                       "lcplus_P", 
-                       "lcplus_PT", 
-                       "lcplus_ETA",
-                       "lcplus_RAPIDITY", 
-                       "lcplus_TIP", 
-                       "lcplus_IPCHI2_OWNPV", 
-                       "lcplus_OWNPV_CHI2", 
-                       "lcplus_TAU",
-                       "lcplus_IP_OWNPV",
-                       "lcplus_L0HadronDecision_TOS", 
-                       "lcplus_FD_OWNPV",
-                       "lcplus_ENDVERTEX_CHI2",
-                       "pplus_M", 
-                       "pplus_P", 
-                       "pplus_PT",
-                       "pplus_RAPIDITY", 
-                       "pplus_ETA",
-                       "pplus_ProbNNp",
-                       "pplus_OWNPV_CHI2",
-                       "kminus_OWNPV_CHI2",
-                       "piplus_OWNPV_CHI2",
-                       "piplus_M",
-                       "piplus_P", 
-                       "piplus_PT", 
-                       "piplus_RAPIDITY",
-                       "piplus_ETA",
-                       "piplus_ProbNNpi",
-                       "piplus_IP_OWNPV",
-                       "pplus_PIDp",
-                       "kminus_M",
-                       "kminus_P", 
-                       "kminus_PT", 
-                       "kminus_RAPIDITY",
-                       "kminus_ETA",
-                       "kminus_ProbNNk", 
-                       "kminus_PIDK", 
-                       "PVNTRACKS",
-                       "piplus_PX", 
-                       "pplus_PX", 
-                       "kminus_PX", 
-                       "piplus_PY", 
-                       "pplus_PY", 
-                       "kminus_PY", 
-                       "piplus_PZ", 
-                       "pplus_PZ", 
-                       "kminus_PZ",
-                       "pplus_IP_OWNPV",
-                       "kminus_IP_OWNPV",
-                       "kminus_IPCHI2_OWNPV",
-                       "piplus_IPCHI2_OWNPV",
-                       "pplus_IPCHI2_OWNPV",
-                       "pplus_TRACK_PCHI2",
-                       "piplus_TRACK_PCHI2",
-		       "kminus_TRACK_PCHI2",
-                       "lcplus_Hlt1TrackMVADecision_TOS"]
+    dataSample_vars = [ "lcplus_RAPIDITY",
+	 	 "piplus_RAPIDITY",
+		 "pplus_RAPIDITY",
+		 "kminus_RAPIDITY",
+		 "lcplus_ENDVERTEX_CHI2",
+		 "lcplus_IPCHI2_OWNPV",
+		 "pplus_OWNPV_CHI2",
+		 "kminus_OWNPV_CHI2",
+		 "piplus_OWNPV_CHI2",
+		 "lcplus_IP_OWNPV",
+		 "piplus_ProbNNpi",
+		 "pplus_ProbNNp",
+		 "kminus_ProbNNk",
+		 "pplus_TRACK_PCHI2",
+		 "piplus_TRACK_PCHI2",
+		 "kminus_TRACK_PCHI2",
+                 "lcplus_FD_OWNPV",     #16
+                 "pplus_PT",            #17
+                 "piplus_IP_OWNPV",     #18
+                 "pplus_IP_OWNPV",      #19
+                 "kminus_IP_OWNPV",     #20
+                 "kminus_PT",           #21
+                 "piplus_PT",           #22
+                 "lcplus_PT",           #23
+                 "kminus_IPCHI2_OWNPV", #24
+                 "piplus_IPCHI2_OWNPV", #25
+                 "pplus_IPCHI2_OWNPV"]  #26
 
     x = 0
     for var in dataSample_vars:
@@ -280,14 +251,58 @@ def runMVA(file_name, root_file, saving_directory, weights_file):
         
         dataTree.GetEntry(i)
         
+
+        """
         m = 0
         for var in dataSample_vars:
 
             if "PVNTRACKS" in var:
                 continue
+            
 
             exec("dsvar"+str(m)+"[0] = tree."+var)
             m+=1
+        """
+        print("BEFORE")
+        exec("print(var16)")
+        exec("print(dsvar16)")
+
+        #"lcplus_FD_OWNPV" 
+        exec("var16[0] = ROOT.TMath.Log(dsvar16[0])")
+
+        #"pplus_PT" 
+        exec("var17[0] = ROOT.TMath.Log(dsvar17[0])")
+
+        #"piplus_IP_OWNPV" 
+        exec("var18[0] = ROOT.TMath.Log(dsvar18[0])")
+
+        #"kminus_IP_OWNPV" 
+        exec("var19[0] = ROOT.TMath.Log(dsvar19[0])")
+
+        #"kminus_PT" 
+        exec("var20[0] = ROOT.TMath.Log(dsvar20[0])")
+         
+        #"piplus_PT" 
+        exec("var21[0] = ROOT.TMath.Log(dsvar21[0])")
+         
+        #"plus_PT"
+        exec("var22[0] = ROOT.TMath.Log(dsvar22[0])")
+        
+        #"lcplus_PT" 
+        exec("var23[0] = ROOT.TMath.Log(dsvar23[0])")
+
+        #"kminus_IPCHI2_OWNPV" 
+        exec("var24[0] = ROOT.TMath.Log(dsvar24[0])")
+            
+        #"piplus_IPCHI2_OWNPV" 
+        exec("var25[0] = ROOT.TMath.Log(dsvar25[0])")
+
+        #"pplus_IPCHI2_OWNPV" 
+        exec("var26[0] = ROOT.TMath.Log(dsvar26[0])")
+
+        print("AFTER")
+        exec("print(var16)")
+        exec("print(dsvar16)")
 
         MVAOutput[0] = reader.EvaluateMVA("BDT method")
 
@@ -300,7 +315,6 @@ def runMVA(file_name, root_file, saving_directory, weights_file):
     sys.stdout.flush()
     
     save_file.cd()
-    save_file.Write("",ROOT.TObject.kOverwrite)
     tree.SetName("DecayTree")
     tree.Write("",ROOT.TObject.kOverwrite)
 
