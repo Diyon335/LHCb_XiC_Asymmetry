@@ -21,18 +21,20 @@ This function takes in a variable name, a root file to get this variable from an
 def plotSimpleHist(variable, root_file, out_directory):
     print("Plotting...")
     bins = 300
-    hRange = [2360,2570]
+    hRange = [-0.7,0.5]
     lineCol = 4
-    xTitle = "Mass MeV/c^2"
-    yTitle = "Events"
+    xTitle = "Mass MeV/c^{2}"
+    yTitle = "Candidates"
     hTitle = "Plot of {}".format(variable)
 
     rfile = ROOT.TFile.Open(root_file, "READ")
     tree = rfile.Get("DecayTree")
 
+    cutTree = tree.CopyTree("BDT_response > -0.18")
+
     strings = root_file.split("/")
     index = len(strings)-1
-    outName = strings[index]+"_histPlot.pdf"
+    outName = variable+"_"+strings[index]+"_histPlot.pdf"
     outFile = out_directory+outName
 
     c = ROOT.TCanvas("c")
@@ -40,7 +42,7 @@ def plotSimpleHist(variable, root_file, out_directory):
     print("Do not exit canvas")
 
     histogram = ROOT.TH1F("histogram", hTitle, bins, hRange[0], hRange[1])
-    tree.Draw(variable+">>histogram("+str(bins)+","+str(hRange[0])+","+str(hRange[1])+")")
+    cutTree.Draw(variable+">>histogram("+str(bins)+","+str(hRange[0])+","+str(hRange[1])+")")
     histogram = ROOT.gDirectory.Get("histogram")
     histogram.SetLineColor(lineCol)
     histogram.GetXaxis().SetTitle(xTitle)

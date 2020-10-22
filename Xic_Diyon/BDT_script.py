@@ -80,6 +80,15 @@ def run():
 
                     runMVA(root_file, TUPLES+i+"/bins/"+bin_type+"/"+root_file, saving_directory, weights_file)
 
+"""
+
+This function returns the variable inside a transformed variable
+
+"""
+def getVariable(string):
+    start = string.find("(")
+    stop = string.find(")")
+    return string[start+1:stop]
         
 """
 
@@ -89,13 +98,10 @@ Parameters are a file name, the root file to analyse, where you want to save it 
 
 """
 def runMVA(file_name, root_file, saving_directory, weights_file):
-    
-    read_file = ROOT.TFile(root_file, "READ")
-    dataTree = read_file.Get("DecayTree")
 
-    reader =  ROOT.TMVA.Reader("V:Color:!Silent")
-    
-    #Variables that were used to train the BDT
+    reader = ROOT.TMVA.Reader("V:Color:!Silent")
+
+    #Variables used in training
     variables =[ "lcplus_RAPIDITY",
 	 	 "piplus_RAPIDITY",
 		 "pplus_RAPIDITY",
@@ -112,216 +118,66 @@ def runMVA(file_name, root_file, saving_directory, weights_file):
 		 "pplus_TRACK_PCHI2",
 		 "piplus_TRACK_PCHI2",
 		 "kminus_TRACK_PCHI2",
-                 "log(lcplus_FD_OWNPV)",     #16
-                 "log(pplus_PT)",            #17
-                 "log(piplus_IP_OWNPV)",     #18
-                 "log(pplus_IP_OWNPV)",      #19
-                 "log(kminus_IP_OWNPV)",     #20
-                 "log(kminus_PT)",           #21
-                 "log(piplus_PT)",           #22
-                 "log(lcplus_PT)",           #23
-                 "log(kminus_IPCHI2_OWNPV)", #24
-                 "log(piplus_IPCHI2_OWNPV)", #25
-                 "log(pplus_IPCHI2_OWNPV)"]  #26
+                 "log(lcplus_FD_OWNPV)",     
+                 "log(pplus_PT)",            
+                 "log(piplus_IP_OWNPV)",     
+                 "log(pplus_IP_OWNPV)",      
+                 "log(kminus_IP_OWNPV)",     
+                 "log(kminus_PT)",           
+                 "log(piplus_PT)",           
+                 "log(lcplus_PT)",           
+                 "log(kminus_IPCHI2_OWNPV)", 
+                 "log(piplus_IPCHI2_OWNPV)", 
+                 "log(pplus_IPCHI2_OWNPV)"]  
 
     n = 0
-    for variable in variables:
-        exec("var"+str(n)+" = array.array(\"f\",[0])")
-        exec("reader.AddVariable(\""+variable+"\",var"+str(n)+")")
+    for var in variables:
+        exec('var'+str(n)+' = array.array(\'f\',[0])')
+        exec('reader.AddVariable("'+var+'",var'+str(n)+')')
         n+=1
 
-    reader.BookMVA("BDT method", weights_file)
+    reader.BookMVA('BDT', weights_file)
 
-    dataSample_vars = [ "lcplus_RAPIDITY",
-	 	 "piplus_RAPIDITY",
-		 "pplus_RAPIDITY",
-		 "kminus_RAPIDITY",
-		 "lcplus_ENDVERTEX_CHI2",
-		 "lcplus_IPCHI2_OWNPV",
-		 "pplus_OWNPV_CHI2",
-		 "kminus_OWNPV_CHI2",
-		 "piplus_OWNPV_CHI2",
-		 "lcplus_IP_OWNPV",
-		 "piplus_ProbNNpi",
-		 "pplus_ProbNNp",
-		 "kminus_ProbNNk",
-		 "pplus_TRACK_PCHI2",
-		 "piplus_TRACK_PCHI2",
-		 "kminus_TRACK_PCHI2",
-                 "lcplus_FD_OWNPV",     #16
-                 "pplus_PT",            #17
-                 "piplus_IP_OWNPV",     #18
-                 "pplus_IP_OWNPV",      #19
-                 "kminus_IP_OWNPV",     #20
-                 "kminus_PT",           #21
-                 "piplus_PT",           #22
-                 "lcplus_PT",           #23
-                 "kminus_IPCHI2_OWNPV", #24
-                 "piplus_IPCHI2_OWNPV", #25
-                 "pplus_IPCHI2_OWNPV"]  #26
+    read_file = ROOT.TFile(root_file, "READ")
+    dataTree = read_file.Get("DecayTree")
 
-    x = 0
-    for var in dataSample_vars:
-        exec("dsvar"+str(x)+" = array.array(\"f\",[0])")
-        exec("dataTree.SetBranchAddress(\""+var+"\", dsvar"+str(x)+")")
-        x+=1
+    MVAOutput = numpy.zeros(1, dtype=float) 
+    save_file = ROOT.TFile.Open(saving_directory+"BDT_"+file_name,"RECREATE")
 
-    MVAOutput = numpy.zeros(1, dtype = float)
+    tree = dataTree.CopyTree('0')
+    tree.Branch('BDT_response', MVAOutput,'BDT_response/D') 
+    N = dataTree.GetEntries()
 
-    save_file = ROOT.TFile(saving_directory+"BDT_"+file_name, "RECREATE")
-    tree = dataTree.CopyTree("0")
+    for i in range(N):
 
-    output_vars = [    "lcplus_MM", 
-                       "lcplus_P", 
-                       "lcplus_PT", 
-                       "lcplus_ETA",
-                       "lcplus_RAPIDITY", 
-                       "lcplus_TIP", 
-                       "lcplus_IPCHI2_OWNPV", 
-                       "lcplus_OWNPV_CHI2", 
-                       "lcplus_TAU",
-                       "lcplus_IP_OWNPV",
-                       "lcplus_L0HadronDecision_TOS", 
-                       "lcplus_FD_OWNPV",
-                       "lcplus_ENDVERTEX_CHI2",
-                       "pplus_M", 
-                       "pplus_P", 
-                       "pplus_PT",
-                       "pplus_RAPIDITY", 
-                       "pplus_ETA",
-                       "pplus_ProbNNp",
-                       "pplus_OWNPV_CHI2",
-                       "kminus_OWNPV_CHI2",
-                       "piplus_OWNPV_CHI2",
-                       "piplus_M",
-                       "piplus_P", 
-                       "piplus_PT", 
-                       "piplus_RAPIDITY",
-                       "piplus_ETA",
-                       "piplus_ProbNNpi",
-                       "piplus_IP_OWNPV",
-                       "pplus_PIDp",
-                       "kminus_M",
-                       "kminus_P", 
-                       "kminus_PT", 
-                       "kminus_RAPIDITY",
-                       "kminus_ETA",
-                       "kminus_ProbNNk", 
-                       "kminus_PIDK", 
-                       "PVNTRACKS",
-                       "piplus_PX", 
-                       "pplus_PX", 
-                       "kminus_PX", 
-                       "piplus_PY", 
-                       "pplus_PY", 
-                       "kminus_PY", 
-                       "piplus_PZ", 
-                       "pplus_PZ", 
-                       "kminus_PZ",
-                       "pplus_IP_OWNPV",
-                       "kminus_IP_OWNPV",
-                       "kminus_IPCHI2_OWNPV",
-                       "piplus_IPCHI2_OWNPV",
-                       "pplus_IPCHI2_OWNPV",
-                       "pplus_TRACK_PCHI2",
-                       "piplus_TRACK_PCHI2",
-		       "kminus_TRACK_PCHI2",
-                       "lcplus_Hlt1TrackMVADecision_TOS"]
-
-
-    a = 0
-    for ovar in output_vars:
-        exec("output"+str(a)+" = numpy.zeros(1, dtype = float)")
-        exec("dataTree.SetBranchAddress(\""+ovar+"\", output"+str(a)+")")
-        exec("tree.Branch(\""+ovar+"\" , output"+str(a)+",\""+ovar+"/D\")")
-        a+=1
-
-
-    tree.Branch("BDT_output",MVAOutput,"BDT_response/D")
-
-    b = 0
-    c = dataTree.GetEntries()
-    for i in range(dataTree.GetEntries()):
-
-        if(b%1000==0):
-            k = (b / c)*100
+        if (i%10000 == 0):
+            k = (i / N)*100
             sys.stdout.write('\r')
             sys.stdout.write("Progress: {0}%".format(str(int(k))))
             sys.stdout.flush()
-        
+
         dataTree.GetEntry(i)
-        
 
-        """
-        m = 0
-        for var in dataSample_vars:
+        a = 0
+        for var in variables:
+            #this is to get the variable inside log(<var>)
+            if "log" in var:
+                exec('var'+str(a)+'[0] = tree.'+getVariable(var))
+            else:
+                exec('var'+str(a)+'[0] = tree.'+var)
+            a += 1
 
-            if "PVNTRACKS" in var:
-                continue
-            
-
-            exec("dsvar"+str(m)+"[0] = tree."+var)
-            m+=1
-        """
-        print("BEFORE")
-        exec("print(var16)")
-        exec("print(dsvar16)")
-
-        #"lcplus_FD_OWNPV" 
-        exec("var16[0] = ROOT.TMath.Log(dsvar16[0])")
-
-        #"pplus_PT" 
-        exec("var17[0] = ROOT.TMath.Log(dsvar17[0])")
-
-        #"piplus_IP_OWNPV" 
-        exec("var18[0] = ROOT.TMath.Log(dsvar18[0])")
-
-        #"kminus_IP_OWNPV" 
-        exec("var19[0] = ROOT.TMath.Log(dsvar19[0])")
-
-        #"kminus_PT" 
-        exec("var20[0] = ROOT.TMath.Log(dsvar20[0])")
-         
-        #"piplus_PT" 
-        exec("var21[0] = ROOT.TMath.Log(dsvar21[0])")
-         
-        #"plus_PT"
-        exec("var22[0] = ROOT.TMath.Log(dsvar22[0])")
-        
-        #"lcplus_PT" 
-        exec("var23[0] = ROOT.TMath.Log(dsvar23[0])")
-
-        #"kminus_IPCHI2_OWNPV" 
-        exec("var24[0] = ROOT.TMath.Log(dsvar24[0])")
-            
-        #"piplus_IPCHI2_OWNPV" 
-        exec("var25[0] = ROOT.TMath.Log(dsvar25[0])")
-
-        #"pplus_IPCHI2_OWNPV" 
-        exec("var26[0] = ROOT.TMath.Log(dsvar26[0])")
-
-        print("AFTER")
-        exec("print(var16)")
-        exec("print(dsvar16)")
-
-        MVAOutput[0] = reader.EvaluateMVA("BDT method")
-
+        MVAOutput[0] = reader.EvaluateMVA('BDT')
         tree.Fill()
-
-        b+=1
 
     sys.stdout.write('\r')
     sys.stdout.write("Progress: 100%")
     sys.stdout.flush()
-    
-    save_file.cd()
-    tree.SetName("DecayTree")
-    tree.Write("",ROOT.TObject.kOverwrite)
-
+     
+    tree.Write("", ROOT.TObject.kOverwrite)
+    save_file.Write("", ROOT.TObject.kOverwrite)
     save_file.Close()
-    read_file.Close()
-
-
+    
 """
 
 There is an option to run it on one particular root file by entering the appropriate arguments after the python command.
