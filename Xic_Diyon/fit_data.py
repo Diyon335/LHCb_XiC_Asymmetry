@@ -32,85 +32,50 @@ CUTS = "BDT_response > 0"
 VAR_PARAMS = [2360, #Variable - Min
               2570] #Variable - Max
 
-GAUSS_PARAMS = [2465,   #Gauss Mean 
-                2450,   #Gauss Mean - Min
-                2480,   #Gauss Mean - Max         
-                30,     #Gauss Width 
-                20,     #Gauss Width - Min
-                40]     #Gauss Width - Max
+GAUSS_PARAMS = [2469,   #Gauss Mean 
+                2460,   #Gauss Mean - Min
+                2478,   #Gauss Mean - Max         
+                20,     #Gauss Width 
+                17,      #Gauss Width - Min
+                23]     #Gauss Width - Max
 
-EXPONENTIAL_PARAMS = [-0.5, #Exponent
-                      -1,   #Exponent - Min
-                      -1.5] #Exponent - Max
+EXPONENTIAL_PARAMS = [-0.05, #Exponent
+                      -5,    #Exponent - Min
+                      0]     #Exponent - Max
+
+CB_PARAMS = [20,   #CB Width
+             17,   #CB Width - Min
+             23,   #CB Width - Max
+             1 ,   #CB N
+             0 ,   #CB N - Min
+             15]   #CB N - Max
 
 FIT_EXPO = True
+FIT_CB = False
 
-
+"""
+These functions return the normalistation lists of the wanted shape
 
 """
 
-This function returns a histogram of the desired variable. It needs a directory to store temporary root files in order to handle memory properly
+def getGaussNormParams(N):
+    gNormList = [N/500 *2 ,
+                0.5 , 
+                N * 2]
 
-"""
-def getHistogram(variable, root_file,  memory_directory, bins = None, From = None, To = None, xTitle = None, yTitle = None, hTitle = None, cuts = None):
+    return gNormList
+
+def getExpoNormParams(N):
+    eNormList = [N*200 /2 , 
+                 0.5, 
+                 N *2]
+
+    return eNormList
+
+def getCBNormParams(N):
+    CBNormList = [N/200 * 3, 0, N*2]
     
-    if(bins != None):
-        hBins = int(bins)
-    else:
-        hBins = 200
-
-    if (From != None) and (To != None):
-        hRange = [int(From),int(To)]
-    else:
-        hRange = [2360,2570]
-
-    lineCol = 4
-    
-    if (xTitle != None):
-        xtitle = xTitle
-    else:
-        xtitle = "Mass MeV/c^{2}"
-
-    if (yTitle != None):
-        ytitle = yTitle
-    else:
-        yTitle = "Candidates"
-
-    if (hTitle != None):
-        htitle = hTitle
-    else:
-        htitle = "Plot of {}".format(variable)
-
-    rfile = ROOT.TFile.Open(root_file, "READ")
-    tree = rfile.Get("DecayTree")
-    
-    testFile = ROOT.TFile.Open(memory_directory+"temp.root","RECREATE")
-    testFile.cd()
-    
-    if (cuts != None) and (cuts != ""):
-        cutTree = tree.CopyTree(cuts)
-
-    histogram = ROOT.TH1F("histogram", htitle, hBins, hRange[0], hRange[1])
-    
-    if(cuts != None) and (cuts != ""):
-        cutTree.Draw(variable+">>histogram("+str(hBins)+","+str(hRange[0])+","+str(hRange[1])+")")
-    else:
-        tree.Draw(variable+">>histogram("+str(hBins)+","+str(hRange[0])+","+str(hRange[1])+")")
-
-    histogram = ROOT.gDirectory.Get("histogram")
-    histogram.SetLineColor(lineCol)
-    histogram.GetXaxis().SetTitle(xtitle)
-    histogram.GetYaxis().SetTitle(ytitle)
-    histogram.SetTitle(htitle)
-    histogram.Draw()
-
-    rfile.Close()
-    testFile.Close()
-
-    del testFile
-    os.system("rm -rf {}".format(memory_directory+"temp.root"))
-
-    return histogram
+    return CBNormList
 
 
 """
@@ -123,20 +88,43 @@ def fit_signal(variable, root_file, out_directory):
     c = ROOT.TCanvas("c")
 
     print("Fitting...")
+    print("Do not exit canvas")
 
     colours = [8, 46, 2]
 
     f = ROOT.TFile.Open(root_file, "READ")
     tree = f.Get("DecayTree")
-    N = tree.GetEntries()
 
-    h = getHistogram(VAR , root_file , MEMORY , bins = BINS, From = RANGE[0], To = RANGE[1], xTitle = X, yTitle = Y, hTitle = T, cuts = CUTS)
+    testFile = ROOT.TFile.Open(MEMORY+"temp.root","RECREATE")
+    testFile.cd()
+
+    if(CUTS != None) and (CUTS != ""):
+        cutTree = tree.CopyTree(CUTS)
+        N = cutTree.GetEntries()
+    else:
+        N = tree.GetEntries()
+
+    h =  histogram = ROOT.TH1F("h", T, BINS, RANGE[0], RANGE[1])
+
+    if(CUTS != None) and (CUTS != ""):
+        cutTree.Draw(variable+">>h("+str(BINS)+","+str(RANGE[0])+","+str(RANGE[1])+")")
+    else:
+        tree.Draw(variable+">>h("+str(BINS)+","+str(RANGE[0])+","+str(RANGE[1])+")")
+
+    h = ROOT.gDirectory.Get("h")
+    h.SetLineColor(4)
+    h.GetXaxis().SetTitle(X)
+    h.GetYaxis().SetTitle(Y)
+    h.SetTitle(T)
+    h.Draw()
 
     var = ROOT.RooRealVar(variable, variable, VAR_PARAMS[0], VAR_PARAMS[1], UNIT)
 
+    GNP = getGaussNormParams(N)
+
     gaussMean = ROOT.RooRealVar("gaussMean","gaussMean", GAUSS_PARAMS[0], GAUSS_PARAMS[1], GAUSS_PARAMS[2])
     gaussWidth = ROOT.RooRealVar("gaussWidth","gaussWidth", GAUSS_PARAMS[3], GAUSS_PARAMS[4], GAUSS_PARAMS[5])
-    gaussNorm = ROOT.RooRealVar("gaussNorm","gaussNorm", N/500 * 2, 0.5, N*2)
+    gaussNorm = ROOT.RooRealVar("gaussNorm","gaussNorm", GNP[0], GNP[1], GNP[2])
 
     gauss = ROOT.RooGaussian("gauss","gauss",var, gaussMean, gaussWidth)
 
@@ -145,8 +133,11 @@ def fit_signal(variable, root_file, out_directory):
     components = ["gauss"]
 
     if(FIT_EXPO):
+
+        ENP = getExpoNormParams(N)
+
         e = ROOT.RooRealVar("e","e",EXPONENTIAL_PARAMS[0], EXPONENTIAL_PARAMS[1], EXPONENTIAL_PARAMS[2])
-        bkgNorm = ROOT.RooRealVar("bkgNorm","bkgNorm", N/200 * 3, 0 , N*2)
+        bkgNorm = ROOT.RooRealVar("bkgNorm","bkgNorm", ENP[0], ENP[1], ENP[2])
 
         bkg = ROOT.RooExponential("bkg","bkg", var, e)
 
@@ -154,12 +145,25 @@ def fit_signal(variable, root_file, out_directory):
         normArgList.add(bkgNorm)
         components.append("bkg")
 
-    #CB Maybe?
+    if(FIT_CB):
+
+        CBNP = getCBNormParams(N)
+
+        cbw = ROOT.RooRealVar("cbw","cbw", CB_PARAMS[0], CB_PARAMS[1], CB_PARAMS[2])
+        cba = ROOT.RooRealVar("cba","cba", EXPONENTIAL_PARAMS[0], EXPONENTIAL_PARAMS[1], EXPONENTIAL_PARAMS[2])
+        cbn = ROOT.RooRealVar("cbn","cbn", CB_PARAMS[3], CB_PARAMS[4], CB_PARAMS[5])
+        cbNorm = ROOT.RooRealVar("cbNorm","cbNorm", CBNP[0], CBNP[1], CBNP[2])
+
+        CB = ROOT.RooCBShape("CB","CB", var, gaussMean, cbw, cba, cbn)
+
+        argList.add(CB)
+        normArgList.add(cbNorm)
+        components.append("CB")
 
 
     model = ROOT.RooAddPdf("model" , "model", argList, normArgList)
-    h = ROOT.gDirectory.Get("histogram")
     rHist = ROOT.RooDataHist("rHist", "rHist", ROOT.RooArgList(var), h)
+    rHist.SetNameTitle("rHist" , T)
 
     model.fitTo(rHist)
 
@@ -172,19 +176,37 @@ def fit_signal(variable, root_file, out_directory):
     
     model.plotOn(frame)
 
-    frame.Draw()
+    y = 0
+    e = 0
+    
+    for pdf in range(len(normArgList)):
+        y += normArgList[pdf].getValV()
+        e += normArgList[pdf].getError()
+
+    legend = ROOT.TLegend(0.6, 0.6, 0.85 ,0.75)
+    ROOT.SetOwnership(legend, False)
+    legend.SetBorderSize(0)
+    legend.SetShadowColor(2)
+    legend.AddEntry(rHist, "Yield: {} +/- {}".format(int(y),int(e)), "L")
+    legend.AddEntry(rHist, "Chi2: {}".format(frame.chiSquare()), "L")
+    legend.SetTextSize(0.03)
+    legend.SetTextColor(1)
+    legend.Draw("same")
+
+    frame.Draw("same")
 
     strings = root_file.split("/")
     outName = VAR+"_"+strings[len(strings)-1]+"_massFit.pdf"
     outFile = out_directory+outName
-
-    print("Do not exit canvas")
 
     c.Update()
     c.Draw()
     c.Print(outFile, "PDF")
 
     f.Close()
+    testFile.Close()
+    del testFile
+    os.system("rm -rf {}".format(MEMORY+"temp.root"))
     print("Done")
 
     return
