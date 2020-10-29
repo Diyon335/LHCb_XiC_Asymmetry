@@ -5,7 +5,7 @@ This script is a minimal configuration/automated script to plot a histogram. Man
 
 The script can be used when you want to plot one variable of a particular root file
 
-Usage: >python plot_histogram.py  <var> <file> <saving directory>
+Usage: >python plot_histogram.py <varName> <root_file> <output_directory> [bins] [From] [To] [xTitle] [yTitle] [hTitle] [cuts]
 
 Author: Diyon Wickremeratne
 """
@@ -91,6 +91,117 @@ def plotSimpleHist(variable, root_file, out_directory, bins = None, From = None,
     print("Done!")
     return
 
+"""
+This function was made to compare the invariant mass distributions of your prepped tuples before and after being passed through the BDT
+
+Since this thesis only worked on 2016 MD data, this function was made to only run on this year's data
+"""
+
+def runBDTComparison():
+    #These lists are needed so that the function works in proper order
+    sets = ["dataset1","dataset2"]
+    bins = ["ptbins","ybins","y_ptbins"]
+    
+    BDT_outputs = "/data/bfys/dwickrem/root_outputs/blinded_random/run_2/2016_MagDown_blinded/"
+    save_directory = "/data/bfys/dwickrem/pdf_outputs/BDT_comparison/"
+
+    variable = "lcplus_MM"
+
+    cuts = "BDT_response > 0"
+
+    hBins = 300
+    hRange = [2360,2570]
+    x = "Mass MeV/c^{2}"
+    y = "Candidates"
+
+    h1T = "Plot of {} before and after BDT (2016 MagDown)".format(variable)
+    h2T = "Plot of {} before and after BDT (2016 MagDown)".format(variable)
+    
+
+    print("Beginning to plot histograms")
+    for dset in sets:
+        print("Working on {}".format(dset))
+        for btype in bins:
+            print("For the {}".format(btype))
+            for root_file in os.listdir(BDT_outputs+dset+"/"+btype+"/"):
+
+                print(root_file)
+
+                if not os.path.exists(save_directory+dset+"/"+btype+"/"):
+                    os.makedirs(save_directory+dset+"/"+btype+"/")
+                
+                rfile = ROOT.TFile.Open(BDT_outputs+dset+"/"+btype+"/"+root_file, "READ")
+                tempFile = ROOT.TFile.Open("/data/bfys/dwickrem/root_outputs/temp.root","RECREATE")
+                name = root_file.replace(".root","")
+                outFile = save_directory+dset+"/"+btype+"/"+"BDT_responseCheck_"+name+".pdf"
+
+                tempFile.cd()
+                tree = rfile.Get("DecayTree")
+                cutTree = tree.CopyTree(cuts)
+
+                c = ROOT.TCanvas("c")
+
+                h1 = ROOT.TH1F("H1", h1T, hBins, hRange[0], hRange[1])
+                tree.Draw(variable+">>H1("+str(hBins)+","+str(hRange[0])+","+str(hRange[1])+")")
+                h1 = ROOT.gDirectory.Get("H1")
+                h1.SetLineColor(4)
+                h1.GetXaxis().SetTitle(x)
+                h1.GetYaxis().SetTitle(y)
+                h1.SetTitle(h1T)
+
+                h2 = ROOT.TH1F("H2", h2T, hBins, hRange[0], hRange[1])
+                cutTree.Draw(variable+">>H2("+str(hBins)+","+str(hRange[0])+","+str(hRange[1])+")")
+                h2 = ROOT.gDirectory.Get("H2")
+                h2.SetLineColor(3)
+                h2.GetXaxis().SetTitle(x)
+                h2.GetYaxis().SetTitle(y)
+                h2.SetTitle(h2T)
+
+                h1.Draw()
+                h2.Draw("same")
+
+                legend1 = ROOT.TLegend(0.8, 0.5 , 0.95, 0.65)
+                legend1.SetHeader("H2","C")
+                ROOT.SetOwnership(legend1,False)
+                legend1.SetBorderSize(1)
+                legend1.SetShadowColor(2)
+                legend1.AddEntry("entries","Entries   "+str(cutTree.GetEntries()), "")
+                legend1.SetTextSize(0.04)
+                legend1.SetTextColor(1)
+                legend1.Draw("same")
+                
+                legend = ROOT.TLegend(0.8, 0.3, 0.95, 0.45)
+                ROOT.SetOwnership(legend, False)
+                legend.SetBorderSize(1)
+                legend.SetShadowColor(2)
+                legend.AddEntry(h1, "Before", "l")
+                legend.AddEntry(h2, "After", "l")
+                legend.SetTextSize(0.03)
+                legend.SetTextColor(1)
+                legend.Draw("same")
+                c.Update()
+
+                c.Draw()
+                c.Print(outFile,"PDF")
+
+                rfile.Close()
+                tempFile.Close()
+
+                c.Close()
+                del c
+
+                del tempFile
+                os.system("rm -rf {}".format("/data/bfys/dwickrem/root_outputs/temp.root"))
+                break
+            break
+        break
+                
+    print("Done")
+                
+
+    
+    
+
 if __name__ == '__main__':
     
     if(len(sys.argv) == 4):
@@ -98,4 +209,6 @@ if __name__ == '__main__':
     elif(len(sys.argv) == 11):
         plotSimpleHist(sys.argv[1], sys.argv[2], sys.argv[3],sys.argv[4], sys.argv[5], sys.argv[6],sys.argv[7], sys.argv[8], sys.argv[9], sys.argv[10])
     else:
-        print("Usage: python plot_histogram.py <varName> <root_file> <output_directory> [bins] [From] [To] [xTitle] [yTitle] [hTitle] [cuts]")
+        #print("Usage: python plot_histogram.py <varName> <root_file> <output_directory> [bins] [From] [To] [xTitle] [yTitle] [hTitle] [cuts]")
+        
+        runBDTComparison()

@@ -27,7 +27,7 @@ def run():
     random_data = True
 
     #Specify the run you want to apply the BDT to
-    run_number = "run_1"
+    run_number = "run_2"
 
     weights_file = "/data/bfys/dwickrem/weights/BDT_BDT_BDT_Xic_pKpi_run21_100trees.weights.xml"
 
@@ -56,10 +56,10 @@ def run():
 
                     for root_file in os.listdir(TUPLES+i+"/random_data/"+dset+"/"+bin_type+"/"):
 
-                        if not os.path.exists(TUPLES+i+"/BDT_outputs/"+run_number+"/"+dset+"/"+bin_type+"/"):
-                            os.makedirs(TUPLES+i+"/BDT_outputs/"+run_number+"/"+dset+"/"+bin_type+"/")
+                        if not os.path.exists("/data/bfys/dwickrem/root_outputs/blinded_random/"+run_number+"/"+dset+"/"+bin_type+"/"):
+                            os.makedirs("/data/bfys/dwickrem/root_outputs/blinded_random/"+run_number+"/"+dset+"/"+bin_type+"/")
 
-                        saving_directory = TUPLES+i+"/BDT_outputs/"+run_number+"/"+dset+"/"+bin_type+"/"
+                        saving_directory = "/data/bfys/dwickrem/root_outputs/blinded_random/"+run_number+"/"+dset+"/"+bin_type+"/"
 
                         print("\nWorking on: "+root_file)
 
@@ -71,14 +71,16 @@ def run():
 
                 for root_file in os.listdir(TUPLES+i+"/bins/"+bin_type+"/"):
 
-                    if not os.path.exists(TUPLES+i+"/BDT_outputs/"+run_number+"/"+bin_type+"/"):
-                        os.makedirs(TUPLES+i+"/BDT_outputs/"+run_number+"/"+bin_type+"/")
+                    if not os.path.exists("/data/bfys/dwickrem/root_outputs/blinded/"+run_number+"/"+bin_type+"/"):
+                        os.makedirs("/data/bfys/dwickrem/root_outputs/blinded/"+run_number+"/"+bin_type+"/")
 
-                    saving_directory = TUPLES+i+"/BDT_outputs/"+run_number+"/"+bin_type+"/"
+                    saving_directory = "/data/bfys/dwickrem/root_outputs/blinded/"+run_number+"/"+bin_type+"/"
 
                     print("\nWorking on: "+root_file)
 
                     runMVA(root_file, TUPLES+i+"/bins/"+bin_type+"/"+root_file, saving_directory, weights_file)
+
+    print("Done")
 
 """
 
