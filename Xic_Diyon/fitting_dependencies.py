@@ -84,7 +84,7 @@ def writeFile(text_file, dictionary):
     errors = []
 
     for bin_type in yield_dictionary:
-        tfile.write("\nAssymetry in {}: ".format(bin_type))
+        tfile.write("\nAsymetry in {}: ".format(bin_type))
 
         for dataset in yield_dictionary[bin_type]:
 
