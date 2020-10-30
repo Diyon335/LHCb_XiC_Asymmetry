@@ -110,6 +110,8 @@ def writeFile(text_file, dictionary):
     totalA = computeA(total_yields)
     totalE = computeAerror(totalA, total_yields)
     tfile.write("\nTOTAL ASYMMETRY: {} +/- {}".format(str(totalA) , str(totalE)))
+    tfile.write("\n ")
+    tfile.write("\nend")
 
     tfile.close()
     
