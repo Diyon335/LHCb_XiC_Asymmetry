@@ -9,6 +9,7 @@ Author: Diyon Wickremeratne
 import ROOT, sys, os
 from fitting_dependencies import writeFile
 
+
 """
 
 Global parameters. Change them here
@@ -19,9 +20,10 @@ DICTIONARY = {}
 
 ## For paths and saving directories ##
 
-TUPLES = "/data/bfys/dwickrem/root_outputs/blinded_random/run_2/2016_MagDown_blinded/"
+TUPLES = "/data/bfys/dwickrem/root_outputs/blinded_random/run_2/"
 PDF_OUTPUT = "/data/bfys/dwickrem/pdf_outputs/mass_fits/blinded_random/run_2/"
 ASYMMETRY_FILE = "/data/bfys/dwickrem/pdf_outputs/mass_fits/blinded_random/run_2/asymmetry.txt"
+DICTIONARY_FILE = "/user/dwickrem/documents/LHCb_XiC_Asymmetry/Xic_Diyon/fitting_dictionary.py"
 SETS = ["dataset1", "dataset2"]
 TUPLE_BINS = ["ptbins","ybins","y_ptbins"]
 
@@ -41,30 +43,6 @@ T = "Plot of {}".format(VAR)
 
 CUTS = "BDT_response > 0"
 
-## For fit shape ##
-VAR_PARAMS = [2360, #Variable - Min
-              2570] #Variable - Max
-
-GAUSS_PARAMS = [2469,   #Gauss Mean 
-                2460,   #Gauss Mean - Min
-                2478,   #Gauss Mean - Max         
-                2,     #Gauss Width 
-                1,      #Gauss Width - Min
-                7]     #Gauss Width - Max
-
-EXPONENTIAL_PARAMS = [-0.07, #Exponent
-                      -0.08,    #Exponent - Min
-                      -0.001]     #Exponent - Max
-
-CB_PARAMS = [2,   #CB Width
-             1,   #CB Width - Min
-             7,   #CB Width - Max
-             1 ,   #CB N
-             0 ,   #CB N - Min
-             15]   #CB N - Max
-
-FIT_EXPO = True
-FIT_CB = True
 
 """
 These functions return the normalistation lists of the wanted shape
@@ -96,7 +74,40 @@ def getCBNormParams(N):
 The function used to fit signal
 
 """
-def fit_signal(variable, root_file, out_directory, dset, bin_type):
+def fit_signal(variable, root_file, out_directory, dset, bin_type, refit_dictionary = None):
+
+    strings = root_file.split("/")
+
+    ## For fit shape ##
+    VAR_PARAMS = [2360, #Variable - Min
+                  2570] #Variable - Max
+    
+    if(refit_dictionary == None):
+        GAUSS_PARAMS = [2469,   #Gauss Mean 
+                        2460,   #Gauss Mean - Min
+                        2478,   #Gauss Mean - Max         
+                        2,     #Gauss Width 
+                        1,      #Gauss Width - Min
+                        7]     #Gauss Width - Max
+
+        EXPONENTIAL_PARAMS = [-0.07, #Exponent
+                              -0.08,    #Exponent - Min
+                              -0.001]     #Exponent - Max
+
+        CB_PARAMS = [2,   #CB Width
+                     1,   #CB Width - Min
+                     7,   #CB Width - Max
+                     1 ,   #CB N
+                     0 ,   #CB N - Min
+                     15]   #CB N - Max
+
+    else:
+        GAUSS_PARAMS = refit_dictionary[dset][bin_type][strings[len(strings)-1]]["gaussParams"]
+        EXPONENTIAL_PARAMS = refit_dictionary[dset][bin_type][strings[len(strings)-1]]["expoParams"]
+        CB_PARAMS = refit_dictionary[dset][bin_type][strings[len(strings)-1]]["cbParams"]
+
+    FIT_EXPO = True
+    FIT_CB = True
     
     c = ROOT.TCanvas("c")
 
@@ -118,7 +129,7 @@ def fit_signal(variable, root_file, out_directory, dset, bin_type):
     else:
         N = tree.GetEntries()
 
-    h =  histogram = ROOT.TH1F("h", T, BINS, RANGE[0], RANGE[1])
+    h = ROOT.TH1F("h", T, BINS, RANGE[0], RANGE[1])
 
     if(CUTS != None) and (CUTS != ""):
         print("Drawing the cut tree")
@@ -135,7 +146,12 @@ def fit_signal(variable, root_file, out_directory, dset, bin_type):
 
     var = ROOT.RooRealVar(variable, variable, VAR_PARAMS[0], VAR_PARAMS[1], UNIT)
 
-    GNP = getGaussNormParams(N)
+    if(refit_dictionary == None):
+        GNP = getGaussNormParams(N)
+    else:
+        GNP = []
+        for gparam in refit_dictionary[dset][bin_type][strings[len(strings)-1]]["gaussNormParams"]:
+            GNP.append(gparam * N)
 
     gaussMean = ROOT.RooRealVar("gaussMean","gaussMean", GAUSS_PARAMS[0], GAUSS_PARAMS[1], GAUSS_PARAMS[2])
     gaussWidth = ROOT.RooRealVar("gaussWidth","gaussWidth", GAUSS_PARAMS[3], GAUSS_PARAMS[4], GAUSS_PARAMS[5])
@@ -147,9 +163,17 @@ def fit_signal(variable, root_file, out_directory, dset, bin_type):
     normArgList = ROOT.RooArgList(gaussNorm)
     components = ["gauss"]
 
-    if(FIT_EXPO):
+    if (refit_dictionary == None):
+        DICTIONARY[dset][bin_type][strings[len(strings)-1]]["gaussParams"] = GAUSS_PARAMS
+        DICTIONARY[dset][bin_type][strings[len(strings)-1]]["gaussNormParams"] = [GNP[0]/N , GNP[1]/N , GNP[2]/N]
 
-        ENP = getExpoNormParams(N)
+    if(FIT_EXPO):
+        if(refit_dictionary == None):
+            ENP = getExpoNormParams(N)
+        else:
+            ENP = []
+            for eparam in refit_dictionary[dset][bin_type][strings[len(strings)-1]]["expoNormParams"]:
+                ENP.append(eparam * N)
 
         e = ROOT.RooRealVar("e","e",EXPONENTIAL_PARAMS[0], EXPONENTIAL_PARAMS[1], EXPONENTIAL_PARAMS[2])
         bkgNorm = ROOT.RooRealVar("bkgNorm","bkgNorm", ENP[0], ENP[1], ENP[2])
@@ -160,9 +184,17 @@ def fit_signal(variable, root_file, out_directory, dset, bin_type):
         normArgList.add(bkgNorm)
         components.append("bkg")
 
-    if(FIT_CB):
+        if (refit_dictionary == None):
+            DICTIONARY[dset][bin_type][strings[len(strings)-1]]["expoParams"] = EXPONENTIAL_PARAMS
+            DICTIONARY[dset][bin_type][strings[len(strings)-1]]["expoNormParams"] = [ENP[0]/N , ENP[1]/N , ENP[2]/N]
 
-        CBNP = getCBNormParams(N)
+    if(FIT_CB):
+        if (refit_dictionary == None):
+            CBNP = getCBNormParams(N)
+        else:
+            CBNP = []
+            for cbparam in refit_dictionary[dset][bin_type][strings[len(strings)-1]]["cbNormParams"]:
+                CBNP.append(cbparam * N)
 
         cbw = ROOT.RooRealVar("cbw","cbw", CB_PARAMS[0], CB_PARAMS[1], CB_PARAMS[2])
         cba = ROOT.RooRealVar("cba","cba", EXPONENTIAL_PARAMS[0], EXPONENTIAL_PARAMS[1], EXPONENTIAL_PARAMS[2])
@@ -174,6 +206,11 @@ def fit_signal(variable, root_file, out_directory, dset, bin_type):
         argList.add(CB)
         normArgList.add(cbNorm)
         components.append("CB")
+
+        if (refit_dictionary == None):
+            cb_param_list = [CB_PARAMS[0], CB_PARAMS[1], CB_PARAMS[2], EXPONENTIAL_PARAMS[0], EXPONENTIAL_PARAMS[1], EXPONENTIAL_PARAMS[2], CB_PARAMS[3], CB_PARAMS[4], CB_PARAMS[5]]
+            DICTIONARY[dset][bin_type][strings[len(strings)-1]]["cbParams"] = cb_param_list
+            DICTIONARY[dset][bin_type][strings[len(strings)-1]]["cbNormParams"] = [ CBNP[0]/N , CBNP[1]/N, CBNP[2]/N]
 
 
     model = ROOT.RooAddPdf("model" , "model", argList, normArgList)
@@ -190,7 +227,6 @@ def fit_signal(variable, root_file, out_directory, dset, bin_type):
         model.plotOn(frame, ROOT.RooFit.Components(components[i]), ROOT.RooFit.LineColor(colours[i]), ROOT.RooFit.LineStyle(2))
     
     model.plotOn(frame)
-    frame.SetMinimum(0)
 
     y = normArgList[0].getValV()
     e = normArgList[0].getError()
@@ -205,14 +241,22 @@ def fit_signal(variable, root_file, out_directory, dset, bin_type):
     legend.SetTextColor(1)
     legend.Draw("same")
     
+    frame.SetAxisRange(0, 1600, "Y")
     frame.Draw("same")
 
-    strings = root_file.split("/")
     name = strings[len(strings)-1].replace(".root","")
     outName = VAR+"_"+name+"_shapeFit.pdf"
     outFile = out_directory+outName
+    
+    if (refit_dictionary == None):
+        DICTIONARY[dset][bin_type][strings[len(strings)-1]]["results"] = "{}:{}:{}".format(str(y) , str(e), str(frame.chiSquare()))
+    else:
+        new_dict = refit_dictionary
+        new_dict[dset][bin_type][strings[len(strings)-1]]["results"] = "{}:{}:{}".format(str(y) , str(e), str(frame.chiSquare()))
 
-    DICTIONARY[dset][bin_type][strings[len(strings)-1]] = "{}:{}:{}".format(str(y) , str(e), str(frame.chiSquare()))
+    if (refit_dictionary != None):
+        if os.path.isfile(outFile):
+            os.system("rm -rf {}".format(outFile))
 
     c.Update()
     c.Draw()
@@ -220,6 +264,11 @@ def fit_signal(variable, root_file, out_directory, dset, bin_type):
 
     f.Close()
     testFile.Close()
+    c.Close()
+
+    ROOT.gDirectory.Delete("h")
+
+    del c
     del testFile
     os.system("rm -rf {}".format(MEMORY+"temp.root"))
     print("Done for "+name)
@@ -239,8 +288,10 @@ def runFits():
         for bin_type in TUPLE_BINS:
 
             root_dict = {}
-            for root_file in os.listdir(TUPLES+"/"+dset+"/"+bin_type+"/"):
-                root_dict[root_file] = ""
+            for root_file in os.listdir(TUPLES+dset+"/"+bin_type+"/"):
+
+                file_dict = {"results" : ""}
+                root_dict[root_file] = file_dict
 
             bin_dict[bin_type] = root_dict
 
@@ -248,22 +299,55 @@ def runFits():
 
     for dset in SETS:
         for bin_type in TUPLE_BINS:
-            for root_file in os.listdir(TUPLES+"/"+dset+"/"+bin_type+"/"):
+            for root_file in os.listdir(TUPLES+dset+"/"+bin_type+"/"):
                 
 
-                outDir = PDF_OUTPUT+"/"+dset+"/"+bin_type+"/"
+                outDir = PDF_OUTPUT+dset+"/"+bin_type+"/"
                 if not os.path.exists(outDir):
                     os.makedirs(outDir)
 
-                fit_signal(VAR, TUPLES+"/"+dset+"/"+bin_type+"/"+root_file , outDir, dset, bin_type)
+                fit_signal(VAR, TUPLES+dset+"/"+bin_type+"/"+root_file , outDir, dset, bin_type)
+                break
                 
     print("Writing file")
     
     writeFile(ASYMMETRY_FILE , DICTIONARY)
 
-    print("Done")
+    python_file = open(DICTIONARY_FILE, "w")
+    python_file.write("fitting_dictionary = "+str(DICTIONARY))
+    python_file.close()
+
+    print("\nDone")
+    print("\nTo refit, use >python fit_data.py <dataset>:<bin>:<root_file>")
 
 
 if __name__ == '__main__':
+    
+    if(len(sys.argv) == 2):
+        argument = sys.argv[1]
+        arguments = argument.split(":")
 
-    runFits()
+        if (len(arguments) != 3):
+            print("\nInsufficient arguments")
+            print("\nTo refit, use >python fit_data.py <dataset>:<bin>:<root_file>")
+            print("\nFor example, >python fit_data.py dataset1:ybin:BDT_Xic_ybin_2.0-2.5.root")
+            sys.exit()
+        elif not arguments[0] in SETS:
+            print("\nIncorrect dataset. Check again")
+            sys.exit()
+        elif not arguments[1] in TUPLE_BINS:
+            print("\nIncorrect bin type. Check again")
+            sys.exit()
+        elif not os.path.isfile(DICTIONARY_FILE):
+            print("\nYou have no fitting dictionary. Run script without arguments")
+            sys.exit()
+        else:
+            from fitting_dictionary import fitting_dictionary as refitting_dictionary
+
+            outDir = PDF_OUTPUT+arguments[0]+"/"+arguments[1]+"/"
+            fit_signal(VAR, TUPLES+arguments[0]+"/"+arguments[1]+"/"+arguments[2] , outDir, arguments[0] , arguments[1] , refit_dictionary = refitting_dictionary)
+            writeFile(ASYMMETRY_FILE , refitting_dictionary)
+            print("\nDone refitting")
+            
+    else:
+        runFits()

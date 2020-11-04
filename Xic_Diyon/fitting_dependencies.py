@@ -24,7 +24,7 @@ def computeError(a_list):
 
 def writeFile(text_file, dictionary):
 
-    TUPLES = "/data/bfys/dwickrem/root_outputs/blinded_random/run_2/2016_MagDown_blinded/"
+    TUPLES = "/data/bfys/dwickrem/root_outputs/blinded_random/run_2/"
 
     tfile = open(text_file, "w")
 
@@ -41,7 +41,7 @@ def writeFile(text_file, dictionary):
         for dset in dsets:
 
             dset_dict = {}
-            for root_file in os.listdir(TUPLES+"/"+dset+"/"+b_type+"/"):
+            for root_file in os.listdir(TUPLES+dset+"/"+b_type+"/"):
                 dset_dict[root_file] = [0 , 0]
 
             b_type_dict[dset] = dset_dict
@@ -57,14 +57,15 @@ def writeFile(text_file, dictionary):
             tfile.write("\n** Bin: "+bin_type+" **")
 
             for root_file in dictionary[dataset][bin_type]:
-                tfile.write("\n{}:{}".format(root_file, dictionary[dataset][bin_type][root_file]))
+                tfile.write("\n{}:{}".format(root_file, dictionary[dataset][bin_type][root_file]["results"]))
                 
-                strings = dictionary[dataset][bin_type][root_file].split(":")
-
+                strings = dictionary[dataset][bin_type][root_file]["results"].split(":")
+                
                 x += float(strings[0])
 
                 yield_dictionary[bin_type][dataset][root_file][0] = float(strings[0])
                 yield_dictionary[bin_type][dataset][root_file][1] = float(strings[1])
+                break
 
             tfile.write("\n ")
             tfile.write("\n ")
