@@ -65,7 +65,6 @@ def writeFile(text_file, dictionary):
 
                 yield_dictionary[bin_type][dataset][root_file][0] = float(strings[0])
                 yield_dictionary[bin_type][dataset][root_file][1] = float(strings[1])
-                break
 
             tfile.write("\n ")
             tfile.write("\n ")

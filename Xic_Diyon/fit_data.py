@@ -307,7 +307,6 @@ def runFits():
                     os.makedirs(outDir)
 
                 fit_signal(VAR, TUPLES+dset+"/"+bin_type+"/"+root_file , outDir, dset, bin_type)
-                break
                 
     print("Writing file")
     
@@ -346,7 +345,9 @@ if __name__ == '__main__':
 
             outDir = PDF_OUTPUT+arguments[0]+"/"+arguments[1]+"/"
             fit_signal(VAR, TUPLES+arguments[0]+"/"+arguments[1]+"/"+arguments[2] , outDir, arguments[0] , arguments[1] , refit_dictionary = refitting_dictionary)
-            writeFile(ASYMMETRY_FILE , refitting_dictionary)
+            python_file = open(DICTIONARY_FILE, "w")
+            python_file.write("fitting_dictionary = "+str(refitting_dictionary))
+            python_file.close()
             print("\nDone refitting")
             
     else:
