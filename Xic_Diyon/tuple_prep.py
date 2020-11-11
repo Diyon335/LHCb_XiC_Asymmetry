@@ -104,8 +104,7 @@ def prepMC():
                        "pplus_IPCHI2_OWNPV",
                        "pplus_TRACK_PCHI2",
                        "piplus_TRACK_PCHI2",
-		       "kminus_TRACK_PCHI2",
-                       "lcplus_Hlt1TrackMVADecision_TOS"]
+		       "kminus_TRACK_PCHI2"]
 
         useful_variables = variables
         
@@ -167,6 +166,7 @@ def prepMC():
         dictionary = MC_jobs_Dict
 
     for element in dictionary:
+        print("Currently working on "+dictionary[element][0] +"_"+ dictionary[element][1])
         if int(element) > 41 and int(element) < 47:
             extra_variables = ["lcplus_Hlt1TrackAllL0Decision_TOS", "lcplus_Hlt2CharmHadD2HHHDecision_TOS","*L0*","*Hlt*","*HLT*"]
             run = 1
@@ -195,9 +195,10 @@ def prepMC():
 
         subjobs = dictionary[element][2]
 
+        print("Adding files to TChain")
         for i in range(subjobs):
-            mc_file = RAW_TUPLES+element+"/"+str(i)+"/MC_Lc2pKpi_"+dictionary[element][4]+".root"
-            if os.path.exists(mc_file):
+            mc_file = RAW_TUPLES+element+"/"+str(i)+"/MC_Lc2pKpiTuple_"+dictionary[element][4]+".root"
+            if os.path.exists(RAW_TUPLES+element+"/"+str(i)+"/"):
                 tree.Add(mc_file)
 
         if(tree.GetEntries() == 0) or (tree.GetEntries() == -1):
@@ -207,10 +208,12 @@ def prepMC():
             os.system("rm -rf {}".format(saving_directory+particle+"_MC_total.root"))
             continue
 
+        print("Activating useful branches on the tree")
         tree = setBranch_function(tree, useful_variables)
         cuts = Imports.getDataCuts(run, blinded = blind_data)
 
         tfile.cd()
+        print("Skimming tree and writing to a new root file")
         new_tree = tree.CopyTree(cuts)
         new_tree.Write("", ROOT.TObject.kOverwrite)
         tfile.Write("", ROOT.TObject.kOverwrite)
@@ -304,8 +307,7 @@ def main(script_run):
                        "pplus_IPCHI2_OWNPV",
                        "pplus_TRACK_PCHI2",
                        "piplus_TRACK_PCHI2",
-		       "kminus_TRACK_PCHI2",
-                       "lcplus_Hlt1TrackMVADecision_TOS"]
+		       "kminus_TRACK_PCHI2"]
 
         useful_variables = variables
         
@@ -603,10 +605,10 @@ Takes a range of TChained subjobs, applies cuts and saves it
 """
 def strip_and_save(Min, Max, cuts, directory, saving_directory, useful_variables, particle, bins = False, tree = None):
     
-    if not (bins):
+    if (bins):
         filename = "{0}2pKpiTuple.root".format(particle)
         
-        alldata = TChain("tuple_{0}2pKpi/DecayTree".format(particle))
+        alldata = ROOT.TChain("tuple_{0}2pKpi/DecayTree".format(particle))
         
         extra_dir = ""
         
@@ -751,7 +753,7 @@ if __name__ == '__main__':
 
     script_run = getRun()
 
-    prepMC()
+    #prepMC()
     main(script_run)
     randomise(script_run)
 
