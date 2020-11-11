@@ -174,7 +174,7 @@ def prepMC():
             
         else:
             extra_variables = ["nSPDHits", "nTracks", "lcplus_Hlt1TrackMVADecision_TOS"]
-            particle = folders_dict[element][3]
+            particle = dictionary[element][3]
             run = 2
 
         for extra_variable in extra_variables:
@@ -196,7 +196,7 @@ def prepMC():
         subjobs = dictionary[element][2]
 
         for i in range(subjobs):
-            mc_file = RAW_TUPLES+element+"/"+i+"/MC_Lc2pKpi_"+dictionary[element][4]+".root"
+            mc_file = RAW_TUPLES+element+"/"+str(i)+"/MC_Lc2pKpi_"+dictionary[element][4]+".root"
             if os.path.exists(mc_file):
                 tree.Add(mc_file)
 
@@ -421,7 +421,7 @@ def main(script_run):
             if (Max == Min):
                 break
                 
-            strip_and_save(Min, Max, cuts, file_directory, saving_directory, useful_variables, particle, bins = True, tree = None)
+            strip_and_save(Min, Max, cuts, file_directory, saving_directory, useful_variables, particle, bins = True)
             
             temp = Max
             
