@@ -35,6 +35,7 @@ def appendVars(path, run, variables = None):
     tfile = open(path+"{}_description.txt".format(run), "a")
     
     tfile.write("\nThere were {} variables used in this preparation of tuples".format(str(len(variables))))
+    tfile.write("\nExtra variables may have been used. Check tuple_prep.py for these variables as they are not listed here")
     tfile.write("\nVariables used to create trees: ")
     
     for var in variables:

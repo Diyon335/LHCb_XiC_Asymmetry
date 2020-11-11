@@ -10,7 +10,7 @@ Authors: Simon Calo, Jonas Tjepkema, Diyon Wickremeratne
 
 import ROOT, os, Imports, sys, numpy, time
 from ROOT import TChain, TFile, TTree
-from Imports import TUPLE_PATH, RAW_TUPLE_PATH, DATA_jobs_Dict
+from Imports import TUPLE_PATH, RAW_TUPLE_PATH, DATA_jobs_Dict, MC_TUPLE_PATH, MC_jobs_Dict
 from numpy import random
 from write_descriptions import makeFile, appendBins, appendVars, writeStartOfRandomisation, appendTreeAnalysis, appendTimeElapsed
 
@@ -30,6 +30,193 @@ def getRun():
             string = i.split("_")
             runs.append(int(string[1]))
         return "run_"+str(numpy.max(runs)+1)
+
+
+def prepMC():
+    print("Prepping MC")
+
+    MC_PATH = MC_TUPLE_PATH
+
+    RAW_TUPLES = RAW_TUPLE_PATH
+
+    TESTING = True
+
+    if not os.path.exists(MC_PATH):
+        os.makedirs(MC_PATH)
+    
+    blind_data = True
+
+    useful_variables = []
+    
+    if(blind_data):
+
+        variables = ["lcplus_MM", 
+                       "lcplus_P", 
+                       "lcplus_PT", 
+                       "lcplus_ETA",
+                       "lcplus_RAPIDITY", 
+                       "lcplus_TIP", 
+                       "lcplus_IPCHI2_OWNPV", 
+                       "lcplus_OWNPV_CHI2", 
+                       "lcplus_TAU",
+                       "lcplus_IP_OWNPV",
+                       "lcplus_L0HadronDecision_TOS", 
+                       "lcplus_FD_OWNPV",
+                       "lcplus_ENDVERTEX_CHI2",
+                       "pplus_M", 
+                       "pplus_P", 
+                       "pplus_PT",
+                       "pplus_RAPIDITY", 
+                       "pplus_ETA",
+                       "pplus_ProbNNp",
+                       "pplus_OWNPV_CHI2",
+                       "kminus_OWNPV_CHI2",
+                       "piplus_OWNPV_CHI2",
+                       "piplus_M",
+                       "piplus_P", 
+                       "piplus_PT", 
+                       "piplus_RAPIDITY",
+                       "piplus_ETA",
+                       "piplus_ProbNNpi",
+                       "piplus_IP_OWNPV",
+                       "pplus_PIDp",
+                       "kminus_M",
+                       "kminus_P", 
+                       "kminus_PT", 
+                       "kminus_RAPIDITY",
+                       "kminus_ETA",
+                       "kminus_ProbNNk", 
+                       "kminus_PIDK", 
+                       "PVNTRACKS",
+                       "piplus_PX", 
+                       "pplus_PX", 
+                       "kminus_PX", 
+                       "piplus_PY", 
+                       "pplus_PY", 
+                       "kminus_PY", 
+                       "piplus_PZ", 
+                       "pplus_PZ", 
+                       "kminus_PZ",
+                       "pplus_IP_OWNPV",
+                       "kminus_IP_OWNPV",
+                       "kminus_IPCHI2_OWNPV",
+                       "piplus_IPCHI2_OWNPV",
+                       "pplus_IPCHI2_OWNPV",
+                       "pplus_TRACK_PCHI2",
+                       "piplus_TRACK_PCHI2",
+		       "kminus_TRACK_PCHI2",
+                       "lcplus_Hlt1TrackMVADecision_TOS"]
+
+        useful_variables = variables
+        
+    else:
+        variables = ["lcplus_MM", 
+                       "lcplus_P", 
+                       "lcplus_PT", 
+                       "lcplus_ETA",
+                       "lcplus_RAPIDITY", 
+                       "lcplus_TIP", 
+                       "lcplus_IPCHI2_OWNPV", 
+                       "lcplus_OWNPV_CHI2", 
+                       "lcplus_TAU",
+                       "lcplus_L0HadronDecision_TOS", 
+                       "lcplus_FD_OWNPV",
+                       "pplus_M", 
+                       "pplus_P", 
+                       "pplus_PT",
+                       "pplus_RAPIDITY", 
+                       "pplus_ETA",
+                       "pplus_ProbNNp",
+                       "piplus_M",
+                       "piplus_P", 
+                       "piplus_PT", 
+                       "piplus_RAPIDITY",
+                       "piplus_ETA",
+                       "piplus_ProbNNpi",
+                       "pplus_PIDp",
+                       "kminus_M",
+                       "kminus_P", 
+                       "kminus_PT", 
+                       "kminus_RAPIDITY",
+                       "piplus_IP_OWNPV",
+                       "kminus_ETA",
+                       "kminus_ProbNNk", 
+                       "kminus_PIDK",
+                       "PVNTRACKS", 
+                       "piplus_PX", 
+                       "pplus_PX", 
+                       "kminus_PX", 
+                       "piplus_PY",
+                       "pplus_PY", 
+                       "kminus_PY", 
+                       "piplus_PZ",
+                       "pplus_PZ", 
+                       "kminus_PZ",
+                       "pplus_IP_OWNPV",
+                       "kminus_IP_OWNPV",
+                       "kminus_IPCHI2_OWNPV",
+                       "piplus_IPCHI2_OWNPV",
+                       "pplus_IPCHI2_OWNPV"]
+
+        useful_variables = variables
+
+
+    if(TESTING):
+        dictionary = {"108":["2016","MagDown", 282,"Xic","26103090"]}
+    else:
+        dictionary = MC_jobs_Dict
+
+    for element in dictionary:
+        if int(element) > 41 and int(element) < 47:
+            extra_variables = ["lcplus_Hlt1TrackAllL0Decision_TOS", "lcplus_Hlt2CharmHadD2HHHDecision_TOS","*L0*","*Hlt*","*HLT*"]
+            run = 1
+            particle = "Lc"
+            
+        else:
+            extra_variables = ["nSPDHits", "nTracks", "lcplus_Hlt1TrackMVADecision_TOS"]
+            particle = folders_dict[element][3]
+            run = 2
+
+        for extra_variable in extra_variables:
+            if not (extra_variable == ""):
+                useful_variables.append(extra_variable)
+
+        if(blind_data):
+            saving_directory = MC_PATH + dictionary[element][0] +"_"+ dictionary[element][1]+"_blinded/"
+        else:
+            saving_directory = MC_PATH + dictionary[element][0] +"_"+ dictionary[element][1]+"/"
+
+        if not os.path.exists(saving_directory):
+            os.makedirs(saving_directory)
+
+        tfile = ROOT.TFile.Open(saving_directory+particle+"_MC_total.root","RECREATE")
+
+        tree = ROOT.TChain("tuple_Lc2pKpi/DecayTree")
+
+        subjobs = dictionary[element][2]
+
+        for i in range(subjobs):
+            mc_file = RAW_TUPLES+element+"/"+i+"/MC_Lc2pKpi_"+dictionary[element][4]+".root"
+            if os.path.exists(mc_file):
+                tree.Add(mc_file)
+
+        if(tree.GetEntries() == 0) or (tree.GetEntries() == -1):
+            print("Stopped creation of "+dictionary[element][0] +"_"+ dictionary[element][1]+" as there were 0 entries")
+            tfile.Close()
+            del tfile
+            os.system("rm -rf {}".format(saving_directory+particle+"_MC_total.root"))
+            continue
+
+        tree = setBranch_function(tree, useful_variables)
+        cuts = Imports.getDataCuts(run, blinded = blind_data)
+
+        tfile.cd()
+        new_tree = tree.CopyTree(cuts)
+        new_tree.Write("", ROOT.TObject.kOverwrite)
+        tfile.Write("", ROOT.TObject.kOverwrite)
+        tfile.Close()
+
+    print("Finished prepping MC")
 
 
 """
@@ -172,13 +359,7 @@ def main(script_run):
                        "pplus_IPCHI2_OWNPV"]
 
         useful_variables = variables
-
-    extra_variables = []
         
-    for extra_variable in extra_variables:
-        if not (extra_variable == ""):
-            #If an extra variable is needed, it will be appended
-            useful_variables.append(extra_variable)
 
     appendVars(PATH, script_run, variables = useful_variables)
     
@@ -192,6 +373,11 @@ def main(script_run):
             extra_variables = ["nSPDHits", "nTracks", "lcplus_Hlt1TrackMVADecision_TOS"]
             particle = folders_dict[element][2]
             run = 2
+
+        for extra_variable in extra_variables:
+            if not (extra_variable == ""):
+                #If an extra variable is needed, it will be appended
+                useful_variables.append(extra_variable)
         
         
         subjobs = folders_dict[element][1]
@@ -235,7 +421,7 @@ def main(script_run):
             if (Max == Min):
                 break
                 
-            strip_and_save(Min, Max, cuts, file_directory, saving_directory, useful_variables, particle, blinded = blind_data)
+            strip_and_save(Min, Max, cuts, file_directory, saving_directory, useful_variables, particle, bins = True, tree = None)
             
             temp = Max
             
@@ -272,7 +458,7 @@ def main(script_run):
         
         print("\n\nCreating the final files")
         
-        split_in_bins_and_save(final_chain, saving_directory, run, useful_variables, particle, blinded = blind_data)
+        split_in_bins_and_save(final_chain, saving_directory, run, useful_variables, particle)
         
         print("\nProcess completed for "+name)
         
@@ -317,7 +503,7 @@ def main(script_run):
             
             del totfile
 
-    print("\nDeleting clusters in 10 seconds")
+    print("\nDeleting clusters")
 
     os.system("rm -rf {}*_clusters".format(BASE_PATH))
             
@@ -347,7 +533,7 @@ def setBranch_function(root_file, useful_variables):
 Takes in a root file with a DecayTree. Divides the tree into bins and saved in the saving_directory
 
 """
-def split_in_bins_and_save(root_file, saving_directory, run, useful_variables, mother_particle = "Lc", blinded = False):
+def split_in_bins_and_save(root_file, saving_directory, run, useful_variables, mother_particle = "Lc"):
     
     #Rapidity and transverse momentum
     ybins = Imports.getYbins()
@@ -368,7 +554,6 @@ def split_in_bins_and_save(root_file, saving_directory, run, useful_variables, m
     if not os.path.exists(saving_directory + "y_ptbins/"):
         os.makedirs(saving_directory + "y_ptbins/")
     
-    blind_data = blinded
     tree = root_file
     
     for particle in particles:
@@ -382,7 +567,7 @@ def split_in_bins_and_save(root_file, saving_directory, run, useful_variables, m
         ycuts = "lcplus_RAPIDITY >= {0} && lcplus_RAPIDITY < {1}".format(ybin[0], ybin[1])
         allcuts = " {0} && {1}".format(ycuts, mass_cuts)
         
-        strip_and_save(0, 0, allcuts, "", saving_directory+"ybins/"+particle+"_ybin_{0}-{1}.root".format(ybin[0],ybin[1]), useful_variables, particle, bins = True, tree = tree, blinded = blind_data)
+        strip_and_save(0, 0, allcuts, "", saving_directory+"ybins/"+particle+"_ybin_{0}-{1}.root".format(ybin[0],ybin[1]), useful_variables, particle, bins = True, tree = tree)
         
         n = len(ptbins)
         i = 0
@@ -402,12 +587,12 @@ def split_in_bins_and_save(root_file, saving_directory, run, useful_variables, m
             
             if (ybin[0]==2.0):
                 allcuts = " {0} && {1}".format(ptcuts, mass_cuts)
-                strip_and_save(0, 0, allcuts, "", saving_directory + "ptbins/" + particle + "_ptbin_{0}-{1}.root".format(ptbin[0], ptbin[1]), useful_variables, particle, bins = True,tree = tree, blinded = blind_data)
+                strip_and_save(0, 0, allcuts, "", saving_directory + "ptbins/" + particle + "_ptbin_{0}-{1}.root".format(ptbin[0], ptbin[1]), useful_variables, particle, bins = True,tree = tree)
                 
             ypt_cut = ycuts+"&&"+ptcuts
             allcuts = "{0} && {1}".format(ypt_cut, mass_cuts)
             
-            strip_and_save(0, 0, allcuts, "", saving_directory + "y_ptbins/" + particle + "_ybin_{0}-{1}_ptbin_{2}-{3}.root".format(ybin[0],ybin[1],ptbin[0],ptbin[1]), useful_variables, particle, bins = True, tree = tree, blinded = blind_data)
+            strip_and_save(0, 0, allcuts, "", saving_directory + "y_ptbins/" + particle + "_ybin_{0}-{1}_ptbin_{2}-{3}.root".format(ybin[0],ybin[1],ptbin[0],ptbin[1]), useful_variables, particle, bins = True, tree = tree)
             
         print("\n")
         
@@ -416,9 +601,7 @@ def split_in_bins_and_save(root_file, saving_directory, run, useful_variables, m
 Takes a range of TChained subjobs, applies cuts and saves it  
 
 """
-def strip_and_save(Min, Max, cuts, directory, saving_directory, useful_variables, particle, bins = False, tree = None, blinded = False):
-    
-    blind_data = blinded
+def strip_and_save(Min, Max, cuts, directory, saving_directory, useful_variables, particle, bins = False, tree = None):
     
     if not (bins):
         filename = "{0}2pKpiTuple.root".format(particle)
@@ -568,6 +751,7 @@ if __name__ == '__main__':
 
     script_run = getRun()
 
+    prepMC()
     main(script_run)
     randomise(script_run)
 
