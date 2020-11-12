@@ -75,5 +75,13 @@ def appendTimeElapsed(path, run, time):
     
     tfile.write("\nTime elapsed in hours: {}".format( str((time/60)/60)) )
     tfile.close()
+
+def appendEfficiency(path, efficiency, value, year):
+
+    tfile = open(path+"asymmetry.txt", "a")
+
+    tfile.write("\n{} efficiency for {} is: {}".format(efficiency,year,value))
+
+    tfile.close()
     
     

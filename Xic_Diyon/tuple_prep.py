@@ -423,7 +423,7 @@ def main(script_run):
             if (Max == Min):
                 break
                 
-            strip_and_save(Min, Max, cuts, file_directory, saving_directory, useful_variables, particle, bins = True)
+            strip_and_save(Min, Max, cuts, file_directory, saving_directory, useful_variables, particle)
             
             temp = Max
             
@@ -605,15 +605,17 @@ Takes a range of TChained subjobs, applies cuts and saves it
 """
 def strip_and_save(Min, Max, cuts, directory, saving_directory, useful_variables, particle, bins = False, tree = None):
     
-    if (bins):
+    if not (bins):
         filename = "{0}2pKpiTuple.root".format(particle)
         
-        alldata = ROOT.TChain("tuple_{0}2pKpi/DecayTree".format(particle))
-        
         extra_dir = ""
-        
+
+        alldata = ROOT.TChain("tuple_{0}2pKpi/DecayTree".format(particle))
+
         for job in range(Min,Max):
-            if os.path.exists("{0}/{1}{2}/{3}".format(directory,job,extra_dir,filename)):
+
+            if os.path.isfile("{0}/{1}{2}/{3}".format(directory,job,extra_dir,filename)):
+
                 alldata.Add("{0}/{1}{2}/{3}".format(directory,job,extra_dir,filename))
                 
         
@@ -638,7 +640,8 @@ def strip_and_save(Min, Max, cuts, directory, saving_directory, useful_variables
     wfile = TFile.Open(saving_directory + extra_string, "RECREATE")
     subtree = alldata.CopyTree(cuts)
     wfile.cd()
-    subtree.Write()
+    subtree.Write("",ROOT.TObject.kOverwrite)
+    wfile.Write("",ROOT.TObject.kOverwrite)
     wfile.Close()
 
 """
