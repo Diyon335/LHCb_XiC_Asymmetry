@@ -29,7 +29,19 @@ def run():
     #Specify the run you want to apply the BDT to
     run_number = "run_2"
 
+    #Specify where you keep random and normal data inside TUPLES
+    #Specify where you want your output files to be stored inside your parent output folder
+    if(random_data):
+        path = "random_data/"
+        output = "blinded_random/"
+    else:
+        path = "bins/"
+        output = "blinded/"
+        
+
     weights_file = "/data/bfys/dwickrem/weights/BDT_BDT_BDT_Xic_pKpi_run21_100trees.weights.xml"
+
+    total_files = ["Xic_total.root"]
 
     print("\nBeginning the BDT script")
 
@@ -45,6 +57,25 @@ def run():
         if "description" in i:
             continue
 
+        year = "/"+i.split("_")[0]
+
+        print("Passing total files through BDT for "+i.split("_")[0])
+
+        for tot_file in total_files:
+
+            print("Working on: "+tot_file)
+            
+            directory = "/data/bfys/dwickrem/root_outputs/"+output+run_number+year+"/"
+            
+            if not os.path.exists(directory):
+                os.makedirs(directory)
+
+            print(TUPLES+i+"/"+tot_file)
+
+            runMVA(tot_file, TUPLES+i+"/"+tot_file, directory , weights_file)
+
+        print("Done with total files")
+
         if(random_data):
             for dset in os.listdir(TUPLES+i+"/random_data/"):
 
@@ -56,10 +87,10 @@ def run():
 
                     for root_file in os.listdir(TUPLES+i+"/random_data/"+dset+"/"+bin_type+"/"):
 
-                        if not os.path.exists("/data/bfys/dwickrem/root_outputs/blinded_random/"+run_number+"/"+dset+"/"+bin_type+"/"):
-                            os.makedirs("/data/bfys/dwickrem/root_outputs/blinded_random/"+run_number+"/"+dset+"/"+bin_type+"/")
+                        if not os.path.exists("/data/bfys/dwickrem/root_outputs/blinded_random/"+run_number+year+"/"+dset+"/"+bin_type+"/"):
+                            os.makedirs("/data/bfys/dwickrem/root_outputs/blinded_random/"+run_number+year+"/"+dset+"/"+bin_type+"/")
 
-                        saving_directory = "/data/bfys/dwickrem/root_outputs/blinded_random/"+run_number+"/"+dset+"/"+bin_type+"/"
+                        saving_directory = "/data/bfys/dwickrem/root_outputs/blinded_random/"+run_number+year+"/"+dset+"/"+bin_type+"/"
 
                         print("\nWorking on: "+root_file)
 
@@ -71,16 +102,16 @@ def run():
 
                 for root_file in os.listdir(TUPLES+i+"/bins/"+bin_type+"/"):
 
-                    if not os.path.exists("/data/bfys/dwickrem/root_outputs/blinded/"+run_number+"/"+bin_type+"/"):
-                        os.makedirs("/data/bfys/dwickrem/root_outputs/blinded/"+run_number+"/"+bin_type+"/")
+                    if not os.path.exists("/data/bfys/dwickrem/root_outputs/blinded/"+run_number+year+"/"+bin_type+"/"):
+                        os.makedirs("/data/bfys/dwickrem/root_outputs/blinded/"+run_number+year+"/"+bin_type+"/")
 
-                    saving_directory = "/data/bfys/dwickrem/root_outputs/blinded/"+run_number+"/"+bin_type+"/"
+                    saving_directory = "/data/bfys/dwickrem/root_outputs/blinded/"+run_number+year+"/"+bin_type+"/"
 
                     print("\nWorking on: "+root_file)
 
                     runMVA(root_file, TUPLES+i+"/bins/"+bin_type+"/"+root_file, saving_directory, weights_file)
 
-    print("Done")
+    print("\nDone")
 
 """
 
@@ -146,7 +177,7 @@ def runMVA(file_name, root_file, saving_directory, weights_file):
     MVAOutput = numpy.zeros(1, dtype=float) 
     save_file = ROOT.TFile.Open(saving_directory+"BDT_"+file_name,"RECREATE")
 
-    tree = dataTree.CopyTree('0')
+    tree = dataTree.CopyTree("0")
     tree.Branch('BDT_response', MVAOutput,'BDT_response/D') 
     N = dataTree.GetEntries()
 
