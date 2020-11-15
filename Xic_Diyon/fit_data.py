@@ -3,6 +3,8 @@ fit_data.py
 
 This script can be used to fit a signal with a shape and calculate its yield
 
+Currently works on one year at a time
+
 Author: Diyon Wickremeratne
 """
 
@@ -15,17 +17,23 @@ from fitting_dependencies import writeFile
 Global parameters. Change them here
 
 """
+#This will save any files that may need refitting
+flags = []
+
 ## Dictionary to save data ##
 DICTIONARY = {}
 
 ## For paths and saving directories ##
+YEAR = "2016"
 
-TUPLES = "/data/bfys/dwickrem/root_outputs/blinded_random/run_2/"
-PDF_OUTPUT = "/data/bfys/dwickrem/pdf_outputs/mass_fits/blinded_random/run_2/"
-ASYMMETRY_FILE = "/data/bfys/dwickrem/pdf_outputs/mass_fits/blinded_random/run_2/asymmetry.txt"
-DICTIONARY_FILE = "/user/dwickrem/documents/LHCb_XiC_Asymmetry/Xic_Diyon/fitting_dictionary.py"
+TUPLES = "/data/bfys/dwickrem/root_outputs/blinded_random/run_2/{}/".format(YEAR)
+PDF_OUTPUT = "/data/bfys/dwickrem/pdf_outputs/mass_fits/blinded_random/run_2/{}/".format(YEAR)
+ASYMMETRY_FILE = "/data/bfys/dwickrem/pdf_outputs/mass_fits/blinded_random/run_2/{}/asymmetry.txt".format(YEAR)
+DICTIONARY_FILE = "/data/bfys/dwickrem/pdf_outputs/mass_fits/blinded_random/run_2/{}/fitting_dictionary.py".format(YEAR)
 SETS = ["dataset1", "dataset2"]
 TUPLE_BINS = ["ptbins","ybins","y_ptbins"]
+
+sys.path.insert(0, "/data/bfys/dwickrem/pdf_outputs/mass_fits/blinded_random/run_2/{}/".format(YEAR))
 
 ## For histogram ##
 MEMORY = "/data/bfys/dwickrem/root_outputs/"
@@ -107,7 +115,7 @@ def fit_signal(variable, root_file, out_directory, dset, bin_type, refit_diction
         CB_PARAMS = refit_dictionary[dset][bin_type][strings[len(strings)-1]]["cbParams"]
 
     FIT_EXPO = True
-    FIT_CB = True
+    FIT_CB = False
     
     c = ROOT.TCanvas("c")
 
@@ -247,12 +255,18 @@ def fit_signal(variable, root_file, out_directory, dset, bin_type, refit_diction
     name = strings[len(strings)-1].replace(".root","")
     outName = VAR+"_"+name+"_shapeFit.pdf"
     outFile = out_directory+outName
+
+    chi = frame.chiSquare()
+
+    if(chi < 0.4) or (chi > 2):
+        flags.append(outFile)
     
     if (refit_dictionary == None):
         DICTIONARY[dset][bin_type][strings[len(strings)-1]]["results"] = "{}:{}:{}".format(str(y) , str(e), str(frame.chiSquare()))
     else:
-        new_dict = refit_dictionary
-        new_dict[dset][bin_type][strings[len(strings)-1]]["results"] = "{}:{}:{}".format(str(y) , str(e), str(frame.chiSquare()))
+        refit_dictionary[dset][bin_type][strings[len(strings)-1]]["results"] = "{}:{}:{}".format(str(y) , str(e), str(frame.chiSquare()))
+
+        writeDict(DICTIONARY_FILE, refit_dictionary)
 
     if (refit_dictionary != None):
         if os.path.isfile(outFile):
@@ -310,14 +324,66 @@ def runFits():
                 
     print("Writing file")
     
-    writeFile(ASYMMETRY_FILE , DICTIONARY)
+    writeFile(ASYMMETRY_FILE , DICTIONARY, YEAR)
 
-    python_file = open(DICTIONARY_FILE, "w")
-    python_file.write("fitting_dictionary = "+str(DICTIONARY))
-    python_file.close()
+    writeDict(DICTIONARY_FILE, DICTIONARY)
 
     print("\nDone")
     print("\nTo refit, use >python fit_data.py <dataset>:<bin>:<root_file>")
+
+def writeDict(path, dictionary):
+    python_file = open(path,"w")
+    python_file.write("fitting_dictionary = {")
+
+    ds_n = 0
+    for ds in dictionary:
+        
+        python_file.write("\n\t\""+ds+"\":{")
+
+        b_n = 0
+        for b in dictionary[ds]:
+            
+            python_file.write("\n\t\t\""+b+"\":{")
+                
+            fi_n = 0
+            for fi in dictionary[ds][b]:
+
+                python_file.write("\n\t\t\t\""+fi+"\":{")
+            
+                n = 0
+                for r in dictionary[ds][b][fi]:
+                    if (n==0):
+                        python_file.write("\n\t\t\t\t\"{}\":\"{}\",".format(r , dictionary[ds][b][fi][r]))
+                    else:
+                        if(n+1 == len(dictionary[ds][b][fi])):
+                            python_file.write("\n\t\t\t\t\""+r+"\":"+ str(dictionary[ds][b][fi][r])+" }")
+                        else:
+                            python_file.write("\n\t\t\t\t\"{}\":{} ,".format(r , dictionary[ds][b][fi][r]))
+                    n+=1
+
+                if (fi_n+1 == len(dictionary[ds][b])):
+                    python_file.write("\n\t\t\t }")
+                else:
+                    python_file.write("\n\t\t\t ,")
+
+                fi_n+=1
+
+            if (b_n+1 == len(dictionary[ds])):
+                python_file.write("\n\t\t }")
+            else:
+                python_file.write("\n\t\t ,")
+
+            b_n+=1
+        
+        if(ds_n +1 == len(dictionary)):
+           python_file.write("\n\t}")
+        else:
+           python_file.write("\n\t,")
+
+        ds_n+=1
+    
+    python_file.close()
+    
 
 
 if __name__ == '__main__':
@@ -344,11 +410,18 @@ if __name__ == '__main__':
             from fitting_dictionary import fitting_dictionary as refitting_dictionary
 
             outDir = PDF_OUTPUT+arguments[0]+"/"+arguments[1]+"/"
+
             fit_signal(VAR, TUPLES+arguments[0]+"/"+arguments[1]+"/"+arguments[2] , outDir, arguments[0] , arguments[1] , refit_dictionary = refitting_dictionary)
-            python_file = open(DICTIONARY_FILE, "w")
-            python_file.write("fitting_dictionary = "+str(refitting_dictionary))
-            python_file.close()
+
+            from fitting_dictionary import fitting_dictionary as rd
+
+            writeFile(ASYMMETRY_FILE , rd, YEAR)
             print("\nDone refitting")
             
     else:
         runFits()
+
+        if(len(flags) > 0):
+            print("These files were flagged and might need refitting:")
+            for j in flags:
+                print("\n"+j)

@@ -22,9 +22,9 @@ def computeError(a_list):
         total += (error)**2
     return math.sqrt(total)
 
-def writeFile(text_file, dictionary):
+def writeFile(text_file, dictionary, year):
 
-    TUPLES = "/data/bfys/dwickrem/root_outputs/blinded_random/run_2/"
+    TUPLES = "/data/bfys/dwickrem/root_outputs/blinded_random/run_2/{}/".format(year)
 
     tfile = open(text_file, "w")
 
@@ -111,7 +111,6 @@ def writeFile(text_file, dictionary):
     totalE = computeAerror(totalA, total_yields)
     tfile.write("\nTOTAL ASYMMETRY: {} +/- {}".format(str(totalA) , str(totalE)))
     tfile.write("\n ")
-    tfile.write("\nend")
 
     tfile.close()
     
